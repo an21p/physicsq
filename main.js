@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 
 let ws;
 function connect() {
@@ -27,57 +28,64 @@ function connect() {
         ws.onerror = function(e){ console.log(e.data)};
     } else alert("WebSockets not supported on your browser.");
 }
-
-window.addEventListener( "load", () => {
+window.addEventListener( "DOMContentLoaded", () => {
 	console.log("load");
 	connect();
 })
 
 
+function animate() {    
+	console.log(camera.rotation);
+	
+
+	controls.update();
+	renderer.render( scene, camera );
+}
+
+function update(state) {    
+
+
+	controls.update();
+	renderer.render( scene, camera );
+}
+
+
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+scene.background = new THREE.Color( 0, 0, 0 );
+
+const camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
+camera.position.y = 150;
+camera.position.z = 500;
+
+const pointLight1 = new THREE.PointLight( 0xffffff, 5, 0, 0 );
+pointLight1.position.set( 300, 300, 300 );
+scene.add( pointLight1 );
+
+const pointLight2 = new THREE.PointLight( 0xffffff, 1, 0, 0 );
+pointLight2.position.set( - 500, - 500, - 500 );
+scene.add( pointLight2 );
+
+const sphere = new THREE.Mesh( new THREE.SphereGeometry( 50, 50, 50 )
+							, new THREE.MeshPhysicalMaterial( { flatShading: true } ) 
+						);
+scene.add( sphere );
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
-// renderer.setAnimationLoop( animate );
 document.body.appendChild( renderer.domElement );
 
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( { color: 0xe3e3e3 } );
-const cube = new THREE.Mesh( geometry, material );
-cube.position.x += 1;
-scene.add( cube );
-
-const planeGeometry = new THREE.PlaneGeometry( 2, 2 ); 
-const planeMaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} ); 
-const plane = new THREE.Mesh( planeGeometry, planeMaterial ); 
+const plane = new THREE.Mesh( new THREE.PlaneGeometry( 400, 400 )
+							, new THREE.MeshBasicMaterial( { color: 0xa1a1a1 } ) 
+						);
+plane.position.y = - 200;
+plane.rotation.x = - Math.PI / 2;
 scene.add( plane );
-plane.position.x -= 1;
 
+const axesHelper = new THREE.AxesHelper( 1000 ); 
+scene.add( axesHelper );
 
-camera.position.z = 5;
+let controls = new TrackballControls( camera, renderer.domElement );
 
-function animate() {    
-	cube.rotation.x += 0.02;
-	cube.rotation.y += 0.01;
+// renderer.setAnimationLoop( animate );
+// renderer.render( scene, camera );
 
-	plane.rotation.x += 0.01;
-	plane.rotation.y += 0.01;
-
-	renderer.render( scene, camera );
-
-}
-
-
-function update(state) {    
-	console.log("update");
-	
-	cube.rotation.x += 0.02;
-	cube.rotation.y += 0.01;
-
-	plane.rotation.x += 0.01;
-	plane.rotation.y += 0.01;
-
-	renderer.render( scene, camera );
-
-}
