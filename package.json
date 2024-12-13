@@ -4,7 +4,9 @@
   "description": "A physics engine in kdb/q",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "transpile": "npx swc main.ts > main.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon && npx vite"
   },
   "author": "",
   "license": "ISC",
