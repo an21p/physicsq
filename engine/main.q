@@ -18,7 +18,7 @@
 /* subs table to keep track of current subscriptions */
 subs:2!flip `handle`func`params!"is*"$\:();
 
-initState:{ .physics.initState[]; .physics.addElement[]; };
+initState:{ .physics.initState[]; .physics.addRandomElements[10]; };
 getState:{`func`result!(`getState;.physics.getState[])};
 
 /*subscribe to something */
