@@ -6,7 +6,8 @@
 	
 	if[action~`loadPage; 
 		show raze "running " ,string(action);
-		sub[`getState;enlist `]
+		initState[];
+		sub[`getState;enlist `];
  	];
 
 	// (neg[x]) .j.j message;
@@ -17,12 +18,8 @@
 /* subs table to keep track of current subscriptions */
 subs:2!flip `handle`func`params!"is*"$\:();
 
-getState:{ 
-	// show raze "state";
-	res: .physics.getState[];
-	show res;
-	`func`result!(`getState;res)
-	};
+initState:{ .physics.initState[]; .physics.addElement[]; };
+getState:{`func`result!(`getState;.physics.getState[])};
 
 /*subscribe to something */
 sub:{`subs upsert(.z.w;x;enlist y)};
@@ -40,4 +37,5 @@ pub:{
 	.physics.updateState[];
 	pub each til count subs;
 	};
-\t 100
+
+\t 30

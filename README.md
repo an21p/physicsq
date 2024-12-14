@@ -1,0 +1,3 @@
+- collisions
+- angular momentum
+- mass

@@ -1,15 +1,15 @@
 \d .physics
 
-gravity: -2.8f;
+gravity: -0.981f;
+state:flip `sym`shape`m`pX`pY`pZ`vX`vY`vZ`fX`fY`fZ!"ssffffffffff"$\:();
 
-state:flip `sym`pX`pY`pZ`vX`vY`vZ`aX`aY`aZ!"sfffffffff"$\:();
-`state insert (`a;0f;1000f;0f;0f;1f;0f;0f;0f;0f);
-
-getState: {[] select sym,pX,pY,pZ from state};
+initState: {[] delete from `.physics.state };
+addElement: {[] `.physics.state insert (`a;`sphere;1f;0f;1000f;0f;0f;1f;0f;0f;0f;0f) };
+getState: {[] select sym,shape,pX,pY,pZ from state };
 
 updateState: {[] 
     / 1. Update velocity for X, Y, Z components 
-    update  vX:vX+aX, vY:vY+.physics.gravity, vZ:vZ+aZ from `.physics.state;
+    update  vX:vX+(fX%m), vY:vY+((.physics.gravity+fY)%m), vZ:vZ+(fZ%m) from `.physics.state;
     / 2. Update position for X, Y, Z components 
     update pX:pX+vX, pY:pY+vY, pZ:pZ+vZ from `.physics.state;
 

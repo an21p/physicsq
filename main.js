@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-var ws;
+
 function connect() {
     if ("WebSocket" in window) {
         ws = new WebSocket("ws://localhost:5001");
@@ -26,56 +26,76 @@ function connect() {
         };
     } else alert("WebSockets not supported on your browser.");
 }
+
 window.addEventListener("DOMContentLoaded", function () {
     console.log("load");
     connect();
 });
-function animate() {
-    console.log(camera.rotation);
-    controls.update();
-    renderer.render(scene, camera);
+
+function addNewObjects(state) {
+    state.forEach((element) => {
+        if (element.sym in shapes) return;
+
+        let object;
+        switch (element.shape) {
+            case "poly":
+                throw new Error("not implemented");
+                break;
+            case "shpere":
+            default:
+                object = new THREE.Mesh(new THREE.SphereGeometry(20, 20, 20), new THREE.MeshPhysicalMaterial({flatShading: true}));
+                break;
+        }
+        object.position.setX(element.pX);
+        object.position.setY(element.pY);
+        object.position.setZ(element.pZ);   
+        shapes[element.sym] = object;
+        scene.add(object);
+    })
 }
+
 function update(state) {
-    state.forEach(function (element) {
-        // console.log(shapes[element.sym]);
-        sphere.position.setX(element.pX);
-        sphere.position.setY(element.pY);
-        sphere.position.setZ(element.pZ);      
+
+    state.forEach((element) => {
+        if (!(element.sym in shapes)) return;
+
+        let object = shapes[element.sym];
+        object.position.setX(element.pX);
+        object.position.setY(element.pY);
+        object.position.setZ(element.pZ);    
     });
+    addNewObjects(state);
+
     controls.update();
     renderer.render(scene, camera);
 }
-var shapes = {};
-var scene = new THREE.Scene();
-scene.background = new THREE.Color(0, 0, 0);
-var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
-camera.position.y = 150;
-camera.position.z = 500;
-var pointLight1 = new THREE.PointLight(0xffffff, 5, 0, 0);
-pointLight1.position.set(300, 300, 300);
-scene.add(pointLight1);
-var pointLight2 = new THREE.PointLight(0xffffff, 1, 0, 0);
-pointLight2.position.set(-500, -500, -500);
-scene.add(pointLight2);
 
-var sphere = new THREE.Mesh(new THREE.SphereGeometry(50, 50, 50), new THREE.MeshPhysicalMaterial({
-    flatShading: true
-}));
-scene.add(sphere);
-shapes['a'] = sphere;
+let ws;
+let shapes = {};
 
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-var plane = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({
-    color: 0xa1a1a1
-}));
+let plane = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({color: 0xa1a1a1}));
 plane.position.y = -200;
 plane.rotation.x = -Math.PI / 2;
+
+let camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 2000);
+camera.position.y = 10;
+camera.position.z = 1500;
+
+let pointLight1 = new THREE.PointLight(0xffffff, 5, 0, 0); pointLight1.position.set(300, 300, 300);
+let pointLight2 = new THREE.PointLight(0xffffff, 1, 0, 0); pointLight2.position.set(-500, -500, -500);
+
+let axesHelper = new THREE.AxesHelper(1000);
+let scene = new THREE.Scene();
+scene.background = new THREE.Color(0, 0, 0);
+scene.add(pointLight1);
+scene.add(pointLight2);
 scene.add(plane);
-var axesHelper = new THREE.AxesHelper(1000);
 scene.add(axesHelper);
-var controls = new TrackballControls(camera, renderer.domElement); // renderer.setAnimationLoop( animate );
-// renderer.render( scene, camera );
 
+let renderer = new THREE.WebGLRenderer(); renderer.setSize(window.innerWidth, window.innerHeight);
 
+var controls = new TrackballControls(camera, renderer.domElement); 
+
+// renderer.setAnimationLoop( animate );
+
+document.body.appendChild(renderer.domElement);
