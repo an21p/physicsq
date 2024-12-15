@@ -1,5 +1,6 @@
-\l physics.q
-\p 5001 
+system "l physics.q";
+system "p 5001";
+
 .z.ws:{
 	message:.j.k x;
 	action: `$message`action;
@@ -38,4 +39,4 @@ pub:{
 	pub each til count subs;
 	};
 
-\t 30
+system "t 30";
