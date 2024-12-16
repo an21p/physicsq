@@ -4,9 +4,9 @@ system "d .physicsTest";
 initSimpleMocked: {
     r:10f;
     mockState: .physics.initWithPlane[];
-    mockState: mockState upsert (`1;`sphere;1f;-10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r);
-    mockState: mockState upsert (`2;`sphere;1f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r);
-    mockState: mockState upsert (`3;`sphere;0f;-1000f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r); // no mass
+    mockState: mockState upsert (`1;`sphere;1f;-10f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r);
+    mockState: mockState upsert (`2;`sphere;1f;10f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r);
+    mockState: mockState upsert (`3;`sphere;0f;-1000f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r); // no mass
 
     // apply force equal to -1*gravity to keep them at the same point
     mockState: update fY: -1*.physics.gravity from mockState where shape=`sphere;
@@ -67,15 +67,106 @@ testUpdateForce:{
 
     :`pass}
 
-testCollision: {[]
+testAABBEdge: {[]
     mockState: .physicsTest.initSimpleMocked[];
     // with a sX (radius) = 10 for each sphere
-    // if sX_1 = -10 and sX_2 = 10 
+    // if pX_1 = -10 and pX_2 = 10 
     // the edge should touch at 0 
     
-    .physics.calculateAABB[mockState];
-    .physics.addRandomElements[1];
+    aabb: .physics.calculateAABB[mockState];
+    s1: select sym, minX, maxX from aabb where sym in `1`2;
+    s1expeted: ([] sym: `1`2; minX: -20 0; maxX: 0 20);
+    .qunit.assertEquals[s1; s1expeted; "correct placement on x-axis"];
 
     // show select from .physics.state;
 
+    :`pass}
+
+testAABB: {[]
+    mockState: .physicsTest.initSimpleMocked[];
+    // with a sX (radius) = 10 for each sphere
+    // if pX_1 = -9 and pX_2 = 10 
+    // they should collide
+
+    mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
+    
+    aabb: .physics.calculateAABB[mockState];
+    s1: select sym, minX, maxX from aabb where sym in `1`2;
+    s1expeted: ([] sym: `1`2; minX: -19 0; maxX: 1 20);
+
+    .qunit.assertEquals[s1; s1expeted; "correct placement on x-axis"];
+
+    // show select from .physics.state;
+
+    :`pass}
+
+testCollisionEdge: {[]
+    mockState: .physicsTest.initSimpleMocked[];
+
+    // show .physics.sortAndSweepCollision[mockState];
+
+    :`pass}
+
+testCollision: {[]
+    mockState: .physicsTest.initSimpleMocked[];
+    mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
+
+
+      / 1. Calculate AABB for all objects
+  stateWithAABB: .physics.calculateAABB[mockState];
+
+  / 2. Sort by minX
+  stateWithAABB: `minX xasc stateWithAABB;
+
+  / 3. Sweep through and check overlaps
+  overlappingPairs:([] a:`symbol$(); b:`symbol$());
+  show stateWithAABB;
+  n:count stateWithAABB;
+
+//   show n;
+  while [n>-1;
+    i:n-1; 
+    show  `$string "i",i;
+    // show  `$string "j",j;
+    a: stateWithAABB i;
+    // show a;
+    j:i-1;
+    while [j>-1;
+        show  `$string "j",j;
+        b: stateWithAABB j;
+        show (b`minX )< a`maxX;
+        show ;
+        if[(b`minX )< a`maxX;
+        (a`maxY) > b`minY;
+        (a`minY )< b`maxY;
+        (a`maxZ) > b`minZ;
+        (a`minZ) < b`maxZ;
+        overlappingPairs: overlappingPairs upsert (a`sym;b`sym);
+        ];
+        j-:1;
+    ];
+    n-:1;
+  ];
+
+    // do[n-1; { 
+    //     show x;
+    //     show "x";
+    //     i:x; 
+    //     a:stateWithAABB i;
+    //     do[n-i-1; { 
+    //     j:i+1+x; 
+    //     b:stateWithAABB j;
+    //     if[b`minX > a`maxX; break]; / No need to check further if b's minX > a's maxX
+    //     if[
+    //         (a`maxY > b`minY) & (a`minY < b`maxY) & 
+    //         (a`maxZ > b`minZ) & (a`minZ < b`maxZ); 
+    //         overlappingPairs,:((a`sym;b`sym)) 
+    //     ]; 
+    //     }] 
+    // }];
+
+    show overlappingPairs;
+
+    // pairs: .physics.sortAndSweepCollision[mockState];
+    // show pairs;
     :`pass}

@@ -45,27 +45,36 @@ updatePositionsAndVelocities: {[state]
     state: update pX:pX+vX, pY:pY+vY, pZ:pZ+vZ from state;
     :state};
 
+    / 3. Update angular velocity for X, Y, Z components 
+    / 4. Update rotation for X, Y, Z components (mod by 2π)
+            // float angularAcceleration = rigidBody->torque / rigidBody->shape.momentOfInertia;
+            // rigidBody->angularVelocity += angularAcceleration * dt;
+            // rigidBody->angle += rigidBody->angularVelocity * dt;
+
 / Calculate AABB for all objects
-calculateAABB:{[state] update minX:pX-(sX%2), maxX:pX+(sX%2), minY:pY-(sY%2), maxY:pY+(sY%2), minZ:pZ-(sZ%2), maxZ:pZ+(sZ%2) from state };
+calculateAABB:{[state] :update minX:pX-sX, maxX:pX+sX, minY:pY-sY, maxY:pY+sY, minZ:pZ-sZ, maxZ:pZ+sZ from state };
 
 / Sort and Sweep collision detection
 sortAndSweepCollision:{[state]
   / 1. Calculate AABB for all objects
-  calculateAABB[];
+  stateWithAABB: calculateAABB[state];
+
 
   / 2. Sort by minX
-  sorted:asc state`minX;
-  state: state@sorted;
+  stateWithAABB: `minX xasc stateWithAABB;
 
   / 3. Sweep through and check overlaps
   overlappingPairs:();
-  n:count state;
+  n:count stateWithAABB;
+
   do[n-1; { 
+    show x;
+    show "x";
     i:x; 
-    a:state i;
+    a:stateWithAABB i;
     do[n-i-1; { 
       j:i+1+x; 
-      b:state j;
+      b:stateWithAABB j;
       if[b`minX > a`maxX; break]; / No need to check further if b's minX > a's maxX
       if[
         (a`maxY > b`minY) & (a`minY < b`maxY) & 
