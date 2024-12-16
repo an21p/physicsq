@@ -109,7 +109,20 @@ function init() {
     scene.background = new THREE.Color(0, 0, 0);
     scene.add(pointLight1);
     scene.add(pointLight2);
-    // scene.add(plane);
+
+    let object1 = new THREE.Mesh(new THREE.SphereGeometry(10, 10, 10), new THREE.MeshPhysicalMaterial({flatShading: true}));
+    object1.position.setX(-10);
+    object1.position.setY(100);
+    object1.position.setZ(0);   
+    
+    let object2 = new THREE.Mesh(new THREE.SphereGeometry(10, 10, 10), new THREE.MeshPhysicalMaterial({flatShading: true}));
+    object2.position.setX(10);
+    object2.position.setY(100);
+    object2.position.setZ(0);   
+
+    scene.add(object1);
+    scene.add(object2);
+
     scene.add(axesHelper);
 
     //controls

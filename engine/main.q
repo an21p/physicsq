@@ -7,7 +7,7 @@ system "p 5001";
 	
 	if[action~`loadPage; 
 		show raze "running " ,string(action);
-		initState[];
+		`state set initState[];
 		sub[`getState;enlist `];
  	];
 
@@ -19,8 +19,11 @@ system "p 5001";
 /* subs table to keep track of current subscriptions */
 subs:2!flip `handle`func`params!"is*"$\:();
 
-initState:{ .physics.initState[]; .physics.addRandomElements[10]; };
-getState:{`func`result!(`getState;.physics.getState[])};
+initState:{ 
+	state: .physics.initWithPlane[]; 
+	: .physics.addRandomElements[state; 10]};
+
+getState:{`func`result!(`getState; get `state)};
 
 /*subscribe to something */
 sub:{`subs upsert(.z.w;x;enlist y)};
@@ -35,7 +38,8 @@ pub:{
 
 /* trigger refresh every 100ms */
 .z.ts:{
-	.physics.updateState[];
+	if [not `state~key `state ; `state set .physics.initState[]];
+	`state set .physics.updateState[state];
 	pub each til count subs;
 	};
 
