@@ -49,9 +49,9 @@ function addNewObjects(state) {
                 object = new THREE.Mesh(new THREE.SphereGeometry(element.sX, element.sY, element.sZ), new THREE.MeshPhysicalMaterial({flatShading: true}));
                 break;
         }
-        object.position.setX(element.pX);
-        object.position.setY(element.pY);
-        object.position.setZ(element.pZ);   
+        object.position.x = element.pX;
+        object.position.y = element.pY;
+        object.position.z = element.pZ;   
         object.rotation.x = element.rX;
         object.rotation.y = element.rY;
         object.rotation.z = element.rZ; 
@@ -79,6 +79,14 @@ function update(state) {
     // controls.update();
     renderer.render(scene, camera);
 }
+function normalise({x, y, speed}){
+    
+    var m = Math.sqrt(x*x + y*y);
+    x = (x/m)*speed;
+    y = (y/m)*speed;
+    return `{"x": ${x}, "y": ${y}}`;
+}
+
 
 function init() {
 
@@ -91,6 +99,35 @@ function init() {
         console.log("load");
         connect();
     });
+
+
+    document.onkeydown = function (e) {
+        let dX = 0.0;
+        let dY = 0.0;
+        let speed = 12.0;
+        switch (e.code) {
+            case "KeyA":
+                dX -= 1;
+                break;
+            case "KeyD":
+                dX += 1;
+                break;
+            case "KeyW":
+                dY += 1;
+                break;
+            case "KeyS":
+                dY -= 1;
+                break;
+        }
+
+        
+        if (dX == 0 && dY == 0) return;
+
+        console.log(normalise({x:dX,y:dY, speed:speed}));
+        
+        ws.send(`{"action": "move", "params": ${normalise({x:dX,y:dY, speed:speed})}}`);
+
+    };
     
     // camera
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 2000);
@@ -110,18 +147,18 @@ function init() {
     scene.add(pointLight1);
     scene.add(pointLight2);
 
-    let object1 = new THREE.Mesh(new THREE.SphereGeometry(10, 10, 10), new THREE.MeshPhysicalMaterial({flatShading: true}));
-    object1.position.setX(-10);
-    object1.position.setY(100);
-    object1.position.setZ(0);   
+    // let object1 = new THREE.Mesh(new THREE.SphereGeometry(10, 10, 10), new THREE.MeshPhysicalMaterial({flatShading: true}));
+    // object1.position.setX(-10);
+    // object1.position.setY(100);
+    // object1.position.setZ(0);   
     
-    let object2 = new THREE.Mesh(new THREE.SphereGeometry(10, 10, 10), new THREE.MeshPhysicalMaterial({flatShading: true}));
-    object2.position.setX(10);
-    object2.position.setY(100);
-    object2.position.setZ(0);   
+    // let object2 = new THREE.Mesh(new THREE.SphereGeometry(10, 10, 10), new THREE.MeshPhysicalMaterial({flatShading: true}));
+    // object2.position.setX(10);
+    // object2.position.setY(100);
+    // object2.position.setZ(0);   
 
-    scene.add(object1);
-    scene.add(object2);
+    // scene.add(object1);
+    // scene.add(object2);
 
     scene.add(axesHelper);
 

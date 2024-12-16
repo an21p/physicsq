@@ -1,30 +1,31 @@
 system "d .physics"
 
 PI:3.141592653589793238;
-gravity: -0.981f;
+gravity: 0f; // -0.981f;
 
-initState: {[] flip `sym`shape`m`pX`pY`pZ`vX`vY`vZ`fX`fY`fZ`rX`rY`rZ`sX`sY`sZ!"ssffffffffffffffff"$\:()};
+initState: {[] flip `sym`shape`m`pX`pY`pZ`vX`vY`vZ`fX`fY`fZ`rX`rY`rZ`sX`sY`sZ`static!"ssffffffffffffffffb"$\:()};
 
 initWithPlane: { 
     state: initState[];  
     state: addPlane[state];  
     :state};
 
-addPlane: {[state] :state upsert (`planeX;`plane;1f;0f;0f;0f;0f;0f;0f;0f;-1*.physics.gravity;0f;-1*.physics.PI%2;0f;0f;1000f;1000f;1f)};
+addPlane: {[state] :state upsert (`planeX;`plane;1f;0f;0f;0f;0f;0f;0f;0f;0f;0f;-1*.physics.PI%2;0f;0f;1000f;1000f;1f;1b)};
 
 / add x random elemenents to state
 addRandomElements: {[state; x]
-    r: 25f;
+    r: 15;
     elements: ([] sym: (`$ string each til x);   // unique id
                     shape: x#`sphere;               
                     m: x?1+til 3;                // mass up to 3
-                    pX: -150+x?300;
-                    pY: 1000+x?500;
+                    pX: -400+x?800;
+                    pY: 20+x?50;
                     pZ: x#0; 
                     vX: x#0; vY: x#0; vZ: x#0;
                     fX: x#0; fY: x#0; fZ: x#0;
                     rX: x#0; rY: x#0; rZ: x#0;
-                    sX: x#r; sY: x#r; sZ: x#r);
+                    sX: x#r; sY: x#r; sZ: x#r;
+                    static: 0b);
     state: state uj elements;
     :state};
 
@@ -40,7 +41,8 @@ updatePositionsAndVelocities: {[state]
     state: update vX:vX+.physics.acceleration[fX;m], 
                   vY:vY+.physics.acceleration[.physics.gravity+fY;m], 
                   vZ:vZ+.physics.acceleration[fZ;m]
-            from state;
+            from state
+            where static = 0b;
     / 2. Update position for X, Y, Z components 
     state: update pX:pX+vX, pY:pY+vY, pZ:pZ+vZ from state;
     :state};
@@ -50,6 +52,16 @@ updatePositionsAndVelocities: {[state]
             // float angularAcceleration = rigidBody->torque / rigidBody->shape.momentOfInertia;
             // rigidBody->angularVelocity += angularAcceleration * dt;
             // rigidBody->angle += rigidBody->angularVelocity * dt;
+
+updatePositionsAndVelocitiesWithInput: {[state; input]
+    / 1. Update velocity for X, Y, Z components 
+    state: update vX: input`x, 
+                  vY: input`y
+            from state
+            where sym = `1;
+    / 2. Update position for X, Y, Z components 
+    state: update pX:pX+vX, pY:pY+vY from state where sym = `1;
+    :state};
 
 / Calculate AABB for all objects
 calculateAABB:{[state] :update minX:pX-sX, maxX:pX+sX, minY:pY-sY, maxY:pY+sY, minZ:pZ-sZ, maxZ:pZ+sZ from state };
@@ -95,8 +107,9 @@ checkCollisionsNarrow: {[state] :state};
 
 checkCollisions: {[state] state: checkCollisionsBroad[state]; state: checkCollisionsNarrow[state]};
 
-updateState: {[state] 
+updateState: {[state; input] 
     state: applyForces[state]; 
     state: updatePositionsAndVelocities[state]; 
+    state: updatePositionsAndVelocitiesWithInput[state;input]; 
     state: checkCollisions[state];
     :state};

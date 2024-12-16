@@ -4,9 +4,9 @@ system "d .physicsTest";
 initSimpleMocked: {
     r:10f;
     mockState: .physics.initWithPlane[];
-    mockState: mockState upsert (`1;`sphere;1f;-10f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r);
-    mockState: mockState upsert (`2;`sphere;1f;10f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r);
-    mockState: mockState upsert (`3;`sphere;0f;-1000f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r); // no mass
+    mockState: mockState upsert (`1;`sphere;1f;-10f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r;0b);
+    mockState: mockState upsert (`2;`sphere;1f;10f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r;0b);
+    mockState: mockState upsert (`3;`sphere;0f;-1000f;10f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;r;r;r;0b); // no mass
 
     // apply force equal to -1*gravity to keep them at the same point
     mockState: update fY: -1*.physics.gravity from mockState where shape=`sphere;
@@ -147,23 +147,6 @@ testCollision: {[]
     ];
     n-:1;
   ];
-
-    // do[n-1; { 
-    //     show x;
-    //     show "x";
-    //     i:x; 
-    //     a:stateWithAABB i;
-    //     do[n-i-1; { 
-    //     j:i+1+x; 
-    //     b:stateWithAABB j;
-    //     if[b`minX > a`maxX; break]; / No need to check further if b's minX > a's maxX
-    //     if[
-    //         (a`maxY > b`minY) & (a`minY < b`maxY) & 
-    //         (a`maxZ > b`minZ) & (a`minZ < b`maxZ); 
-    //         overlappingPairs,:((a`sym;b`sym)) 
-    //     ]; 
-    //     }] 
-    // }];
 
     show overlappingPairs;
 

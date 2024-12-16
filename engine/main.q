@@ -4,15 +4,21 @@ system "p 5001";
 .z.ws:{
 	message:.j.k x;
 	action: `$message`action;
-	
+	params: message`params;	
+	show raze "running " ,string(action);
+
 	if[action~`loadPage; 
-		show raze "running " ,string(action);
 		`state set initState[];
+		`input set (`x`y)!0f,0f;
 		sub[`getState;enlist `];
+		system "t 1";
  	];
 
-	// (neg[x]) .j.j message;
-	// value x
+	if[action~`move; 
+		show message`params;
+		`input set message`params;
+		// show input;
+ 	];
 	};
 .z.wc: {delete from `subs where handle=x};
 
@@ -39,8 +45,7 @@ pub:{
 /* trigger refresh every 100ms */
 .z.ts:{
 	if [not `state~key `state ; `state set .physics.initState[]];
-	`state set .physics.updateState[state];
+	`state set .physics.updateState[state; value `input];
+	`input set (`x`y)!0f,0f;
 	pub each til count subs;
 	};
-
-system "t 30";
