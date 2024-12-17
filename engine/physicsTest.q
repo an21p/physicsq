@@ -100,56 +100,68 @@ testAABB: {[]
 
     :`pass}
 
-testCollisionEdge: {[]
+testCollisionDetectionNoCollision: {[]
     mockState: .physicsTest.initSimpleMocked[];
+    mockState: update pX: -11f, vX: 1f, fX: 0f from mockState where sym=`1;
 
-    // show .physics.sortAndSweepCollision[mockState];
-
+    pairs: .physics.sortAndSweepCollision[mockState];
+    collidingSpheres: select from pairs where aShape = `sphere, bShape = `sphere;
+    .qunit.assertEquals[count collidingSpheres; 0; "should contain no collisions"];
     :`pass}
 
-testCollision: {[]
+testCollisionDetectionEdge: {[]
+    mockState: .physicsTest.initSimpleMocked[];
+
+    pairs: .physics.sortAndSweepCollision[mockState];
+    collidingSpheres: select from pairs where aShape = `sphere, bShape = `sphere;
+    .qunit.assertEquals[count collidingSpheres; 0; "should contain no collisions"];
+    :`pass}
+
+testCollisionDetectionSortAndSweep: {[]
     mockState: .physicsTest.initSimpleMocked[];
     mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
 
+    pairs: .physics.sortAndSweepCollision[mockState];
+    collidingSpheres: select from pairs where aShape = `sphere, bShape = `sphere;
+    .qunit.assertEquals[count collidingSpheres; 1; "should contain 1 collision"];
+    .qunit.assertEquals[collidingSpheres`a; `1];
+    .qunit.assertEquals[collidingSpheres`b; `2];
+    :`pass}
 
-      / 1. Calculate AABB for all objects
-  stateWithAABB: .physics.calculateAABB[mockState];
+testCollisionSpheres: {[]
+    mockState: .physicsTest.initSimpleMocked[];
+    mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
+    // mockState: update pX: 19f, vX: 1f, fX: 0f from mockState where sym=`3;
 
-  / 2. Sort by minX
-  stateWithAABB: `minX xasc stateWithAABB;
+    s1: .physics.checkCollisions[mockState];
+    show s1;
 
-  / 3. Sweep through and check overlaps
-  overlappingPairs:([] a:`symbol$(); b:`symbol$());
-  show stateWithAABB;
-  n:count stateWithAABB;
+    s2: .physics.checkCollisions[s1];
+    show s2;
+    
+    //.qunit.assertEquals[; ; "should contain 1 collision"];
 
-//   show n;
-  while [n>-1;
-    i:n-1; 
-    show  `$string "i",i;
-    // show  `$string "j",j;
-    a: stateWithAABB i;
-    // show a;
-    j:i-1;
-    while [j>-1;
-        show  `$string "j",j;
-        b: stateWithAABB j;
-        show (b`minX )< a`maxX;
-        show ;
-        if[(b`minX )< a`maxX;
-        (a`maxY) > b`minY;
-        (a`minY )< b`maxY;
-        (a`maxZ) > b`minZ;
-        (a`minZ) < b`maxZ;
-        overlappingPairs: overlappingPairs upsert (a`sym;b`sym);
-        ];
-        j-:1;
-    ];
-    n-:1;
-  ];
+    :`pass}
 
-    show overlappingPairs;
 
-    // pairs: .physics.sortAndSweepCollision[mockState];
-    // show pairs;
+testNormalise: {[]
+    nv: .physics.normalise[(9;0;0f)];
+    .qunit.assertEquals[nv; (1f;0f;0f); "correct normaliseation"];
+
+    :`pass}
+
+testDistnaceSpheres: {[]
+    mockState: .physicsTest.initSimpleMocked[];
+    mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
+
+    pair: select from mockState where sym in `1`2;
+    a:pair 0;
+    b:pair 1;
+    d: .physics.distanceSpheres[a;b];
+    .qunit.assertEquals[d; 19f; "correct distance between sphere centers"];
+
+
+
+    
+
     :`pass}

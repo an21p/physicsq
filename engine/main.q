@@ -9,13 +9,13 @@ system "p 5001";
 
 	if[action~`loadPage; 
 		`state set initState[];
-		`input set (`x`y)!0f,0f;
+		`input set (`x`y`z)!0f,0f,0f;
 		sub[`getState;enlist `];
 		system "t 1";
  	];
 
 	if[action~`move; 
-		show message`params;
+		// show message`params;
 		`input set message`params;
 		// show input;
  	];
@@ -27,7 +27,7 @@ subs:2!flip `handle`func`params!"is*"$\:();
 
 initState:{ 
 	state: .physics.initWithPlane[]; 
-	: .physics.addRandomElements[state; 10]};
+	: .physics.addRandomElements[state; 2]};
 
 getState:{`func`result!(`getState; get `state)};
 
@@ -46,6 +46,14 @@ pub:{
 .z.ts:{
 	if [not `state~key `state ; `state set .physics.initState[]];
 	`state set .physics.updateState[state; value `input];
-	`input set (`x`y)!0f,0f;
+	`input set (`x`y`z)!0f,0f,0f;
 	pub each til count subs;
 	};
+
+
+debug: {
+	`input set (`x`y`z)!0f,0f,0f;
+	st: initState[];
+	show st;
+	st: .physics.updateState[st;input];
+	st: .physics.updateState[stop;input]}

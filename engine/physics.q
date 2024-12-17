@@ -19,7 +19,7 @@ addRandomElements: {[state; x]
                     shape: x#`sphere;               
                     m: x?1+til 3;                // mass up to 3
                     pX: -400+x?800;
-                    pY: 20+x?50;
+                    pY: 30; //20+x?100;
                     pZ: x#0; 
                     vX: x#0; vY: x#0; vZ: x#0;
                     fX: x#0; fY: x#0; fZ: x#0;
@@ -54,58 +54,120 @@ updatePositionsAndVelocities: {[state]
             // rigidBody->angle += rigidBody->angularVelocity * dt;
 
 updatePositionsAndVelocitiesWithInput: {[state; input]
-    / 1. Update velocity for X, Y, Z components 
-    state: update vX: input`x, 
-                  vY: input`y
-            from state
-            where sym = `1;
     / 2. Update position for X, Y, Z components 
-    state: update pX:pX+vX, pY:pY+vY from state where sym = `1;
+    state: update pX:pX+input`x, pY:pY+input`y, pZ:pZ+input`z from state where sym = `1;
     :state};
 
 / Calculate AABB for all objects
 calculateAABB:{[state] :update minX:pX-sX, maxX:pX+sX, minY:pY-sY, maxY:pY+sY, minZ:pZ-sZ, maxZ:pZ+sZ from state };
 
+// Normalise vector to magnitute 1
+// @param v vector
+// @return normalised vector
+normalise: {[v] :v%sqrt sum v*v}
+
+// Convert a row from state into a vector
+// @param s a row from state
+// @return vector
+getSphereCenter: {[s] :(s`pX; s`pY; s`pZ)}
+
+distanceSpheres: {[a;b] :sqrt sum v*v: getSphereCenter[a]-getSphereCenter[b]}
+
+intersectSpheres: {[pair]
+    // show "intersectSpheres";
+
+    result: ([] sym: `symbol$(); pXn: `float$(); pYn: `float$(); pZn: `float$());
+    // if [0~ count pair; :result];
+
+    a:pair 0;
+    b:pair 1;
+
+    dist: distanceSpheres[a;b];
+    redi: (a`sX) + b`sX;
+
+    if[dist >= redi; :result];
+
+    centerA: getSphereCenter[a];
+    centerB: getSphereCenter[b];
+
+    normal: normalise[centerB - centerA]; // vector pointing from A to B (to push B out of the way)
+    depth: redi-dist;
+
+    show redi;
+    show dist;
+
+    moveB: normal * depth%2;
+    moveA: -1 * moveB;
+
+    result: result upsert ((a`sym);(moveA 0);(moveA 1);(moveA 2));
+    result: result upsert ((b`sym);(moveB 0);(moveB 1);(moveB 2));
+    :result}
+
 / Sort and Sweep collision detection
 sortAndSweepCollision:{[state]
   / 1. Calculate AABB for all objects
+  / state: .physics.convertToBodyCoordinates[state];
   stateWithAABB: calculateAABB[state];
-
 
   / 2. Sort by minX
   stateWithAABB: `minX xasc stateWithAABB;
 
   / 3. Sweep through and check overlaps
-  overlappingPairs:();
-  n:count stateWithAABB;
+  overlappingPairs:([] a:`symbol$(); b:`symbol$(); aShape:`symbol$(); bShape:`symbol$());
+  n: count stateWithAABB;
 
-  do[n-1; { 
-    show x;
-    show "x";
-    i:x; 
-    a:stateWithAABB i;
-    do[n-i-1; { 
-      j:i+1+x; 
-      b:stateWithAABB j;
-      if[b`minX > a`maxX; break]; / No need to check further if b's minX > a's maxX
-      if[
-        (a`maxY > b`minY) & (a`minY < b`maxY) & 
-        (a`maxZ > b`minZ) & (a`minZ < b`maxZ); 
-        overlappingPairs,:((a`sym;b`sym)) 
-      ]; 
-    }] 
-  }];
+  i:0;
+  while [i<n; 
+        // show  `$string "i",i;
+        a: stateWithAABB i;
+        j:i+1;
+        while [j<n;
+            // show  `$string "j",j;
+            b: stateWithAABB j;
+            if[(b`minX) < a`maxX;
+            (a`maxY) > b`minY;
+            (a`minY) < b`maxY;
+            (a`maxZ) > b`minZ;
+            (a`minZ) < b`maxZ;
+            overlappingPairs: overlappingPairs upsert (a`sym;b`sym;a`shape;b`shape);
+            ];
+            j+:1;
+        ];
+        i+:1;
+    ];
 
   :overlappingPairs
   };
 
-checkCollisionsBroad: {[state]
-  /show sortAndSweepCollision[state];
+checkCollisionsNarrow: {[state; pairs]
+  //show "checkCollisionsNarrow";
+
+  collidingSpheres: select from pairs where aShape = `sphere, bShape = `sphere;
+  n: count collidingSpheres;
+
+    i:0;
+    while [i<n;
+        x: collidingSpheres i;
+        k: (x`a),x`b;
+        pair: select from state where sym in k;
+        transformations: intersectSpheres[pair];
+  
+        if [not 0~ count transformations;
+            show transformations;
+            state: state lj `sym xkey transformations;
+            state: delete pXn,pYn,pZn from update pX:pX+pXn, pY:pY+pYn, pZ:pZ+pZn from state where not pXn=0n
+        ];
+        i+:1;
+    ];
+
+
+
   :state};
 
-checkCollisionsNarrow: {[state] :state};
-
-checkCollisions: {[state] state: checkCollisionsBroad[state]; state: checkCollisionsNarrow[state]};
+checkCollisions: {[state] 
+    pairs: sortAndSweepCollision[state];
+    state: checkCollisionsNarrow[state; pairs];
+    :state};
 
 updateState: {[state; input] 
     state: applyForces[state]; 

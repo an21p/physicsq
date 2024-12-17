@@ -46,7 +46,9 @@ function addNewObjects(state) {
                 break;
             case "shpere":
             default:
-                object = new THREE.Mesh(new THREE.SphereGeometry(element.sX, element.sY, element.sZ), new THREE.MeshPhysicalMaterial({flatShading: true}));
+                let color = 0xff0000;
+                if (element.sym === "1") color = 0xa1a1a1;
+                object = new THREE.Mesh(new THREE.SphereGeometry(element.sX, element.sY, element.sZ), new THREE.MeshPhysicalMaterial({flatShading: true, color: color}));
                 break;
         }
         object.position.x = element.pX;
@@ -70,21 +72,22 @@ function update(state) {
         if (!(element.sym in shapes)) return;
 
         let object = shapes[element.sym];
-        object.position.setX(element.pX);
-        object.position.setY(element.pY);
-        object.position.setZ(element.pZ);    
+        object.position.x = element.pX;
+        object.position.y = element.pY;
+        object.position.z = element.pZ;
     });
     addNewObjects(state);
 
     // controls.update();
     renderer.render(scene, camera);
 }
-function normalise({x, y, speed}){
+function normalise({x, y, z, speed}){
     
-    var m = Math.sqrt(x*x + y*y);
+    var m = Math.sqrt(x*x + y*y + z*z);
     x = (x/m)*speed;
     y = (y/m)*speed;
-    return `{"x": ${x}, "y": ${y}}`;
+    z = (z/m)*speed;
+    return `{"x": ${x}, "y": ${y}, "z": ${z}}`;
 }
 
 
@@ -104,28 +107,42 @@ function init() {
     document.onkeydown = function (e) {
         let dX = 0.0;
         let dY = 0.0;
-        let speed = 12.0;
+        let dZ = 0.0;
+        let speed = 15.0;
         switch (e.code) {
-            case "KeyA":
-                dX -= 1;
-                break;
             case "KeyD":
+                ws.send(`{"action": "right"}`);
                 dX += 1;
                 break;
+            case "KeyA":
+                ws.send(`{"action": "left"}`);
+                dX -= 1;
+                break;
             case "KeyW":
+                ws.send(`{"action": "up"}`);
                 dY += 1;
                 break;
             case "KeyS":
+                ws.send(`{"action": "down"}`);
                 dY -= 1;
+                break;
+            case "KeyC":
+                ws.send(`{"action": "in"}`);
+                dZ += 1;
+                break;
+           case "KeyX":
+                ws.send(`{"action": "out"}`);
+                dZ -= 1;
                 break;
         }
 
         
-        if (dX == 0 && dY == 0) return;
+        if (dX == 0 && dY == 0 && dZ == 0) return;
 
-        console.log(normalise({x:dX,y:dY, speed:speed}));
+        console.log(normalise({x:dX,y:dY,z:dZ, speed:speed}));
         
-        ws.send(`{"action": "move", "params": ${normalise({x:dX,y:dY, speed:speed})}}`);
+        ws.send(`{"action": "move", "params": ${normalise({x:dX,y:dY,z:dZ, speed:speed})}}`);
+         // TODO: move this to q
 
     };
     
