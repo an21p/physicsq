@@ -67,7 +67,8 @@ function render() {
 }
 
 function update(state) {
-
+    Object.keys(controller).forEach(key=> {    controller[key].pressed && controller[key].func()  })
+    
     state.forEach((element) => {
         if (!(element.sym in shapes)) return;
 
@@ -81,15 +82,6 @@ function update(state) {
     // controls.update();
     renderer.render(scene, camera);
 }
-function normalise({x, y, z, speed}){
-    
-    var m = Math.sqrt(x*x + y*y + z*z);
-    x = (x/m)*speed;
-    y = (y/m)*speed;
-    z = (z/m)*speed;
-    return `{"x": ${x}, "y": ${y}, "z": ${z}}`;
-}
-
 
 function init() {
 
@@ -103,47 +95,12 @@ function init() {
         connect();
     });
 
+    document.onkeydown = (e) => {
+        if(controller[e.code]){    controller[e.code].pressed = true  }
+    };
 
-    document.onkeydown = function (e) {
-        let dX = 0.0;
-        let dY = 0.0;
-        let dZ = 0.0;
-        let speed = 15.0;
-        switch (e.code) {
-            case "KeyD":
-                ws.send(`{"action": "right"}`);
-                dX += 1;
-                break;
-            case "KeyA":
-                ws.send(`{"action": "left"}`);
-                dX -= 1;
-                break;
-            case "KeyW":
-                ws.send(`{"action": "up"}`);
-                dY += 1;
-                break;
-            case "KeyS":
-                ws.send(`{"action": "down"}`);
-                dY -= 1;
-                break;
-            case "KeyC":
-                ws.send(`{"action": "in"}`);
-                dZ += 1;
-                break;
-           case "KeyX":
-                ws.send(`{"action": "out"}`);
-                dZ -= 1;
-                break;
-        }
-
-        
-        if (dX == 0 && dY == 0 && dZ == 0) return;
-
-        console.log(normalise({x:dX,y:dY,z:dZ, speed:speed}));
-        
-        ws.send(`{"action": "move", "params": ${normalise({x:dX,y:dY,z:dZ, speed:speed})}}`);
-         // TODO: move this to q
-
+    document.onkeyup = (e) => {
+        if(controller[e.code]){    controller[e.code].pressed = false  }
     };
     
     // camera
@@ -195,7 +152,14 @@ function init() {
     controls.maxPolarAngle = Math.PI / 2;
 
 }
-
+const controller = {
+    "KeyD" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "right"}`) },
+    "KeyA" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "left"}`) },
+    "KeyW" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "up"}`) },
+    "KeyS" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "down"}`) },
+    "KeyC" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "in"}`) },
+    "KeyX" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "out"}`) },
+}
 let ws, renderer, controls, camera, axesHelper, scene
 let shapes = {};
 init();

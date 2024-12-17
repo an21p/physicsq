@@ -55,7 +55,12 @@ updatePositionsAndVelocities: {[state]
 
 updatePositionsAndVelocitiesWithInput: {[state; input]
     / 2. Update position for X, Y, Z components 
-    state: update pX:pX+input`x, pY:pY+input`y, pZ:pZ+input`z from state where sym = `1;
+    // show "xx",input;
+    dX: (input 0);
+    dY: (input 1);
+    dZ: (input 2);
+
+    state: update pX:pX+dX, pY:pY+dY, pZ:pZ+dZ from state where sym = `1;
     :state};
 
 / Calculate AABB for all objects
@@ -64,7 +69,7 @@ calculateAABB:{[state] :update minX:pX-sX, maxX:pX+sX, minY:pY-sY, maxY:pY+sY, m
 // Normalise vector to magnitute 1
 // @param v vector
 // @return normalised vector
-normalise: {[v] :v%sqrt sum v*v}
+normalise: {[v] :0^v%sqrt sum v*v}
 
 // Convert a row from state into a vector
 // @param s a row from state
@@ -92,9 +97,6 @@ intersectSpheres: {[pair]
 
     normal: normalise[centerB - centerA]; // vector pointing from A to B (to push B out of the way)
     depth: redi-dist;
-
-    show redi;
-    show dist;
 
     moveB: normal * depth%2;
     moveA: -1 * moveB;
@@ -153,7 +155,7 @@ checkCollisionsNarrow: {[state; pairs]
         transformations: intersectSpheres[pair];
   
         if [not 0~ count transformations;
-            show transformations;
+            // show transformations;
             state: state lj `sym xkey transformations;
             state: delete pXn,pYn,pZn from update pX:pX+pXn, pY:pY+pYn, pZ:pZ+pZn from state where not pXn=0n
         ];
@@ -172,6 +174,8 @@ checkCollisions: {[state]
 updateState: {[state; input] 
     state: applyForces[state]; 
     state: updatePositionsAndVelocities[state]; 
-    state: updatePositionsAndVelocitiesWithInput[state;input]; 
+    if [not all 0=input;
+        state: updatePositionsAndVelocitiesWithInput[state;input]; 
+    ]
     state: checkCollisions[state];
     :state};

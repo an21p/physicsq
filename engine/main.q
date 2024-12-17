@@ -9,16 +9,46 @@ system "p 5001";
 
 	if[action~`loadPage; 
 		`state set initState[];
-		`input set (`x`y`z)!0f,0f,0f;
+		`input set (0f;0f;0f);
 		sub[`getState;enlist `];
-		system "t 1";
+		system "t 30";
  	];
 
+	// if[action~`move; 
+	// 	// show message`params;
+	// 	`input set message`params;
+	// 	// show input;
+ 	// ];
+
 	if[action~`move; 
-		// show message`params;
-		`input set message`params;
-		// show input;
+		direction: `$message`params;
+		input: value `input;
+		m: (0f; 0f; 0f);
+
+		show direction;
+
+		if [direction~`up;
+			m: (0f; 1f; 0f);
+		];
+		if [direction~`down;
+			m: (0f; -1f; 0f);
+		];
+		if [direction~`right;
+			m: (1f; 0f; 0f);
+		];
+		if [direction~`left;
+			m: (-1f; 0f; 0f);
+		];
+		if [direction~`in;
+			m: (0f; 0f; 1f);
+		];
+		if [direction~`out;
+			m: (0f; 0f; -1f);
+		];
+
+		`input set input+m;
  	];
+
 	};
 .z.wc: {delete from `subs where handle=x};
 
@@ -45,14 +75,15 @@ pub:{
 /* trigger refresh every 100ms */
 .z.ts:{
 	if [not `state~key `state ; `state set .physics.initState[]];
-	`state set .physics.updateState[state; value `input];
-	`input set (`x`y`z)!0f,0f,0f;
+	nextInput: 5*.physics.normalise[value `input];
+	`state set .physics.updateState[state; nextInput];
+	if [not all 0 = value `input; `input set (0f;0f;0f);];
 	pub each til count subs;
 	};
 
 
 debug: {
-	`input set (`x`y`z)!0f,0f,0f;
+	`input set (0f;0f;0f);
 	st: initState[];
 	show st;
 	st: .physics.updateState[st;input];
