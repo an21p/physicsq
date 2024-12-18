@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 function connect() {
     if ("WebSocket" in window) {
@@ -32,21 +33,33 @@ function connect() {
     } else alert("WebSockets not supported on your browser.");
 }
 
+function pad(num) {
+    return String((1000*num).toFixed(0)).padStart(3,'0');
+}
+
+function toDebugString(e) {
+    // console.log('0'+pad(e.pX));
+    
+    return `<div>p:(x:${pad(e.pX)}, y:${pad(e.pY)}, z:${pad(e.pZ)})</div>
+            <div>v:(x:${pad(e.vX)}, y:${pad(e.vY)}, z:${pad(e.vZ)})</div>
+            <div>f:(x:${pad(e.fX)}, y:${pad(e.fY)}, z:${pad(e.fZ)})</div>`;
+}
+
 function addNewObjects(state) {
     state.forEach((element) => {
         if (element.sym in shapes) return;
 
-        let object;
+        let object; 
+        let color = 0xff0000;
+        
         switch (element.shape) {
             case "poly":
                 throw new Error("not implemented");
-                break;
             case "plane":
                 object = new THREE.Mesh(new THREE.PlaneGeometry(element.sX, element.sY), new THREE.MeshBasicMaterial({color: 0xa1a1a1}));   
                 break;
             case "shpere":
             default:
-                let color = 0xff0000;
                 if (element.sym === "1") color = 0xa1a1a1;
                 object = new THREE.Mesh(new THREE.SphereGeometry(element.sX, element.sY, element.sZ), new THREE.MeshPhysicalMaterial({flatShading: true, color: color}));
                 break;
@@ -58,7 +71,23 @@ function addNewObjects(state) {
         object.rotation.y = element.rY;
         object.rotation.z = element.rZ; 
         shapes[element.sym] = object;
+        object.layers.enableAll();
         scene.add(object);
+
+        if (element.static) return;
+
+        const objectDiv = document.createElement( 'div' );
+        objectDiv.className = 'label';
+        objectDiv.innerHTML = toDebugString(element);
+        objectDiv.style.backgroundColor = 'transparent';
+        objectDiv.style.color = 'white';
+        objectDiv.style.fontSize = '12px';
+
+        const objectLabel = new CSS2DObject( objectDiv );
+        objectLabel.position.set( 50, 0, 0 );
+        objectLabel.center.set( 0, 1 );
+        object.add( objectLabel );
+        objectLabel.layers.set( 0 );
     })
 }
 
@@ -67,12 +96,15 @@ function render() {
 }
 
 function update(state) {
-    Object.keys(controller).forEach(key=> {    controller[key].pressed && controller[key].func()  })
+    Object.keys(controller).forEach(key=> { controller[key].pressed && controller[key].func() })
     
     state.forEach((element) => {
+        if (element.static) return;
         if (!(element.sym in shapes)) return;
 
         let object = shapes[element.sym];
+        let label = object.children[0];
+        label.element.innerHTML = toDebugString(element);
         object.position.x = element.pX;
         object.position.y = element.pY;
         object.position.z = element.pZ;
@@ -81,13 +113,30 @@ function update(state) {
 
     // controls.update();
     renderer.render(scene, camera);
+    labelRenderer.render( scene, camera );
 }
 
+
+function onWindowResize(){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    labelRenderer.setSize( window.innerWidth, window.innerHeight );
+}
+
+
 function init() {
+    window.addEventListener( 'resize', onWindowResize, false );
 
     // renderer
     renderer = new THREE.WebGLRenderer(); renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+
+    labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize( window.innerWidth, window.innerHeight );
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    document.body.appendChild( labelRenderer.domElement );
 
     // ws
     window.addEventListener("DOMContentLoaded", function () {
@@ -104,9 +153,9 @@ function init() {
     };
     
     // camera
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 2000);
-    camera.position.y = 100;
-    camera.position.z = 1500;
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.y = 200;
+    camera.position.z = 500;
 
     // lights
     let pointLight1 = new THREE.PointLight(0xffffff, 5, 0, 0); pointLight1.position.set(300, 300, 300);
@@ -120,24 +169,11 @@ function init() {
     scene.background = new THREE.Color(0, 0, 0);
     scene.add(pointLight1);
     scene.add(pointLight2);
-
-    // let object1 = new THREE.Mesh(new THREE.SphereGeometry(10, 10, 10), new THREE.MeshPhysicalMaterial({flatShading: true}));
-    // object1.position.setX(-10);
-    // object1.position.setY(100);
-    // object1.position.setZ(0);   
-    
-    // let object2 = new THREE.Mesh(new THREE.SphereGeometry(10, 10, 10), new THREE.MeshPhysicalMaterial({flatShading: true}));
-    // object2.position.setX(10);
-    // object2.position.setY(100);
-    // object2.position.setZ(0);   
-
-    // scene.add(object1);
-    // scene.add(object2);
-
     scene.add(axesHelper);
 
+
     //controls
-    controls = new OrbitControls( camera, renderer.domElement );
+    controls = new OrbitControls( camera, labelRenderer.domElement );
     controls.listenToKeyEvents( window ); // optional
 
     controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
@@ -160,6 +196,6 @@ const controller = {
     "KeyC" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "in"}`) },
     "KeyX" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "out"}`) },
 }
-let ws, renderer, controls, camera, axesHelper, scene
+let ws, renderer, controls, camera, axesHelper, scene, labelRenderer
 let shapes = {};
 init();

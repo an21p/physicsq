@@ -5,13 +5,13 @@ system "p 5001";
 	message:.j.k x;
 	action: `$message`action;
 	params: message`params;	
-	show raze "running " ,string(action);
+	// show raze "running " ,string(action);
 
 	if[action~`loadPage; 
 		`state set initState[];
 		`input set (0f;0f;0f);
 		sub[`getState;enlist `];
-		system "t 30";
+		system "t 1";
  	];
 
 	// if[action~`move; 
@@ -74,8 +74,8 @@ pub:{
 
 /* trigger refresh every 100ms */
 .z.ts:{
-	if [not `state~key `state ; `state set .physics.initState[]];
-	nextInput: 5*.physics.normalise[value `input];
+	if [not `state~key `state; `state set .physics.initState[]];
+	nextInput: 0.001f*.physics.normalise[value `input];
 	`state set .physics.updateState[state; nextInput];
 	if [not all 0 = value `input; `input set (0f;0f;0f);];
 	pub each til count subs;

@@ -41,8 +41,7 @@ updatePositionsAndVelocities: {[state]
     state: update vX:vX+.physics.acceleration[fX;m], 
                   vY:vY+.physics.acceleration[.physics.gravity+fY;m], 
                   vZ:vZ+.physics.acceleration[fZ;m]
-            from state
-            where static = 0b;
+            from state where static = 0b;
     / 2. Update position for X, Y, Z components 
     state: update pX:pX+vX, pY:pY+vY, pZ:pZ+vZ from state;
     :state};
@@ -54,13 +53,18 @@ updatePositionsAndVelocities: {[state]
             // rigidBody->angle += rigidBody->angularVelocity * dt;
 
 updatePositionsAndVelocitiesWithInput: {[state; input]
-    / 2. Update position for X, Y, Z components 
     // show "xx",input;
-    dX: (input 0);
-    dY: (input 1);
-    dZ: (input 2);
+    m1: first value first select m from state where sym=`1;
+    acc: .physics.acceleration[input;m1];
+    aX: (acc 0);
+    aY: (acc 1);
+    aZ: (acc 2);
 
-    state: update pX:pX+dX, pY:pY+dY, pZ:pZ+dZ from state where sym = `1;
+    / 1. Update velocity for X, Y, Z components 
+    state: update vX:vX+aX, vY:vY+aY, vZ:vZ+aZ from state where sym = `1;   
+    / 2. Update position for X, Y, Z components 
+    state: update pX:pX+vX, pY:pY+vY, pZ:pZ+vZ from state where sym = `1;   
+    // state: update pX:pX+dX, pY:pY+dY, pZ:pZ+dZ from state where sym = `1;
     :state};
 
 / Calculate AABB for all objects
@@ -173,9 +177,9 @@ checkCollisions: {[state]
 
 updateState: {[state; input] 
     state: applyForces[state]; 
-    state: updatePositionsAndVelocities[state]; 
     if [not all 0=input;
         state: updatePositionsAndVelocitiesWithInput[state;input]; 
     ]
+    state: updatePositionsAndVelocities[state]; 
     state: checkCollisions[state];
     :state};
