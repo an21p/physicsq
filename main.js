@@ -12,8 +12,7 @@ function connect() {
         };
         ws.onmessage = function (e) {
             /*parse message from JSON String into Object*/ 
-            // console.log(e.data);
-            
+            // console.log(e.data);            
             var d = JSON.parse(e.data);
             /*depending on the messages func value, pass the result
             to the appropriate handler function*/ 
@@ -33,14 +32,14 @@ function connect() {
     } else alert("WebSockets not supported on your browser.");
 }
 
-function pad(num) {
-    return String((1000*num).toFixed(0)).padStart(3,'0');
+function pad(num, scale=1000) {
+    return String((num*scale).toFixed(0)).padStart(2,'0');
 }
 
 function toDebugString(e) {
     // console.log('0'+pad(e.pX));
     
-    return `<div>p:(x:${pad(e.pX)}, y:${pad(e.pY)}, z:${pad(e.pZ)})</div>
+    return `<div>p:(x:${pad(e.pX,1)}, y:${pad(e.pY,1)}, z:${pad(e.pZ,1)})</div>
             <div>v:(x:${pad(e.vX)}, y:${pad(e.vY)}, z:${pad(e.vZ)})</div>
             <div>f:(x:${pad(e.fX)}, y:${pad(e.fY)}, z:${pad(e.fZ)})</div>`;
 }
@@ -153,8 +152,8 @@ function init() {
     };
     
     // camera
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.y = 200;
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 2000);
+    camera.position.y = 50;
     camera.position.z = 500;
 
     // lights

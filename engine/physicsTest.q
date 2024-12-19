@@ -1,6 +1,9 @@
 system "l physics.q";
 system "d .physicsTest";
 
+trap: {[x] 
+    .Q.trp[parse;x;{1@.Q.sbt 2#y}]}
+
 initSimpleMocked: {
     r:10f;
     mockState: .physics.initWithPlane[];
@@ -38,7 +41,7 @@ testUpdateForce:{
     // velocity should increment by 1
     // position should increment by 1
     mockState: update fX: 1f from mockState where shape=`sphere;
-    s1v: update vX:vX+.physics.acceleration[fX;m] from mockState;
+    s1v: update vX:vX+.physics.acceleration[fX;invM] from mockState;
     s1p: update pX:pX+vX from s1v;
     s1e: select sym,pX,pY,pZ,vX,vY,vZ from s1p;
     mockState: .physics.updatePositionsAndVelocities[mockState];
@@ -101,15 +104,19 @@ testAABB: {[]
     :`pass}
 
 testCollisionDetectionNoCollision: {[]
+    show "testCollisionDetectionNoCollision";
     mockState: .physicsTest.initSimpleMocked[];
     mockState: update pX: -11f, vX: 1f, fX: 0f from mockState where sym=`1;
 
     pairs: .physics.sortAndSweepCollision[mockState];
     collidingSpheres: select from pairs where aShape = `sphere, bShape = `sphere;
+    show pairs;
     .qunit.assertEquals[count collidingSpheres; 0; "should contain no collisions"];
     :`pass}
 
 testCollisionDetectionEdge: {[]
+    show "testCollisionDetectionEdge";
+
     mockState: .physicsTest.initSimpleMocked[];
 
     pairs: .physics.sortAndSweepCollision[mockState];
@@ -118,6 +125,8 @@ testCollisionDetectionEdge: {[]
     :`pass}
 
 testCollisionDetectionSortAndSweep: {[]
+    show "testCollisionDetectionSortAndSweep";
+
     mockState: .physicsTest.initSimpleMocked[];
     mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
 
@@ -129,18 +138,15 @@ testCollisionDetectionSortAndSweep: {[]
     :`pass}
 
 testCollisionSpheres: {[]
+    show "testCollisionSpheres";
+
     mockState: .physicsTest.initSimpleMocked[];
     mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
     // mockState: update pX: 19f, vX: 1f, fX: 0f from mockState where sym=`3;
-
-    s1: .physics.checkCollisions[mockState];
-    show s1;
-
-    s2: .physics.checkCollisions[s1];
-    show s2;
-    
+    show s1: .physics.checkCollisions[mockState];
+    show s2: .physics.checkCollisions[s1];
     //.qunit.assertEquals[; ; "should contain 1 collision"];
-
+    :`fail;
     :`pass}
 
 
@@ -159,9 +165,4 @@ testDistnaceSpheres: {[]
     b:pair 1;
     d: .physics.distanceSpheres[a;b];
     .qunit.assertEquals[d; 19f; "correct distance between sphere centers"];
-
-
-
-    
-
     :`pass}

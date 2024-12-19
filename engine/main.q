@@ -1,6 +1,7 @@
 system "l physics.q";
 system "p 5001";
 
+
 .z.ws:{
 	message:.j.k x;
 	action: `$message`action;
@@ -25,7 +26,7 @@ system "p 5001";
 		input: value `input;
 		m: (0f; 0f; 0f);
 
-		show direction;
+		//show direction;
 
 		if [direction~`up;
 			m: (0f; 1f; 0f);
@@ -75,7 +76,7 @@ pub:{
 /* trigger refresh every 100ms */
 .z.ts:{
 	if [not `state~key `state; `state set .physics.initState[]];
-	nextInput: 0.001f*.physics.normalise[value `input];
+	nextInput: 0.0005f*.physics.normalise[value `input];
 	`state set .physics.updateState[state; nextInput];
 	if [not all 0 = value `input; `input set (0f;0f;0f);];
 	pub each til count subs;
