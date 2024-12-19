@@ -16,16 +16,16 @@ initWithPlane: {
     state: addPlane[state];  
     :state};
 
-addPlane: {[state] :state upsert (`planeX;`plane;1f;0f;0f;0f;0f;0f;0f;0f;0f;0f;-1*.physics.PI%2;0f;0f;1000f;1000f;1f;1b)};
+addPlane: {[state] :state upsert (`planeX;`plane;100f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1000f;1b)};
 
 / add x random elemenents to state
 addRandomElements: {[state; x]
     r: 15;
     elements: ([] sym: (`$ string each til x);   // unique id
                     shape: x#`sphere;               
-                    invM: 1%x?1+til 3;              // inverse mass up to 3
+                    invM: 1%x#10;              // inverse mass up to 3
                     pX: -400+x?800;
-                    pY: 30; //20+x?100;
+                    pY: 40+x?200;
                     pZ: x#0; 
                     vX: x#0; vY: x#0; vZ: x#0;
                     fX: x#0; fY: x#0; fZ: x#0;
@@ -38,15 +38,13 @@ addRandomElements: {[state; x]
 / return the current state
 getState: {[state] select sym,shape,pX,pY,pZ,rX,rY,rZ,sX,sY,sZ from state };
 
-applyForces: {[state] :state};
-
 acceleration: {[force; invMass] :force*invMass};
 
-updatePositionsAndVelocities: {[state]
-    / 1. Update velocity for X, Y, Z components 
-    state: update vX:vX+.physics.acceleration[fX;invM], 
-                  vY:vY+.physics.acceleration[.physics.gravity+fY;invM], 
-                  vZ:vZ+.physics.acceleration[fZ;invM]
+updatePositionsAndVelocities: {[state; dt]
+    / 1. Update velocity for X, Y, Z components    
+    state: update vX:vX+dt*.physics.acceleration[fX;invM], 
+                  vY:vY+dt*.physics.acceleration[.physics.gravity+fY;invM],
+                  vZ:vZ+dt*.physics.acceleration[fZ;invM]
             from state where static = 0b;
     / 2. Update position for X, Y, Z components 
     state: update pX:pX+vX, pY:pY+vY, pZ:pZ+vZ from state;
@@ -58,7 +56,7 @@ updatePositionsAndVelocities: {[state]
             // rigidBody->angularVelocity += angularAcceleration * dt;
             // rigidBody->angle += rigidBody->angularVelocity * dt;
 
-updatePositionsAndVelocitiesWithInput: {[state; input]
+updatePositionsAndVelocitiesWithInput: {[state; input; dt]
     // show "xx",input;
     invM: first value first select invM from state where sym=`1;
     acc: .physics.acceleration[input;invM];
@@ -67,9 +65,9 @@ updatePositionsAndVelocitiesWithInput: {[state; input]
     aZ: (acc 2);
 
     / 1. Update velocity for X, Y, Z components 
-    state: update vX:vX+aX, vY:vY+aY, vZ:vZ+aZ from state where sym = `1;   
+    state: update vX:vX+dt*aX, vY:vY+dt*aY, vZ:vZ+dt*aZ from state where sym = `1;   
     / 2. Update position for X, Y, Z components 
-    state: update pX:pX+vX, pY:pY+vY, pZ:pZ+vZ from state where sym = `1;   
+    state: update pX:pX+dt*vX, pY:pY+dt*vY, pZ:pZ+dt*vZ from state where sym = `1;   
     :state};
 
 / Calculate AABB for all objects
@@ -180,13 +178,10 @@ intersectSpheres: {[pair]
     :result}
 
 calculateImpulse: {[a;b;normal] 
-    resitution: 0.5f; 
+    resitution: 0.1f; 
     relativeVelocity: getVelocityVector[b]-getVelocityVector[a];
     j: -1*(1f+resitution) * (relativeVelocity mmu normal);
-    j:j % (a`invM)+b`invM;
-    j:j % normal;
-    j[where abs[j]=0w]:0n; 
-    :0^j};
+    :normal *j % (a`invM)+b`invM};
 
 resolveCollisions: {[state; pairs]
   //show "resolveCollisions";
@@ -204,6 +199,7 @@ resolveCollisions: {[state; pairs]
         if [not 0~ count transformations;
             // show transformations;
             tmpState: state lj `sym xkey transformations;
+            //show transformations;
             // adjust position in case of intersection
             tmpState: delete pXn,pYn,pZn from update pX:pX+pXn, pY:pY+pYn, pZ:pZ+pZn from tmpState where not pXn=0n;
             // apply new velocity
@@ -221,11 +217,10 @@ checkCollisions: {[state]
     state: resolveCollisions[state; pairs];
     :state};
 
-updateState: {[state; input] 
-    state: applyForces[state]; 
+updateState: {[state; input; dt] 
     if [not all 0=input;
-        state: updatePositionsAndVelocitiesWithInput[state;input]; 
+        state: updatePositionsAndVelocitiesWithInput[state;input;dt]; 
     ]
-    state: updatePositionsAndVelocities[state]; 
+    state: updatePositionsAndVelocities[state;dt]; 
     state: checkCollisions[state];
     :state};

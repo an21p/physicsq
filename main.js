@@ -87,6 +87,7 @@ function addNewObjects(state) {
         objectLabel.center.set( 0, 1 );
         object.add( objectLabel );
         objectLabel.layers.set( 0 );
+        objectLabel.visible = false;
     })
 }
 
@@ -116,17 +117,16 @@ function update(state) {
 }
 
 
-function onWindowResize(){
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    labelRenderer.setSize( window.innerWidth, window.innerHeight );
-}
-
-
 function init() {
-    window.addEventListener( 'resize', onWindowResize, false );
-
+    window.addEventListener('resize', () => {
+        const aspect = window.innerWidth / window.innerHeight;
+        camera.left = frustumSize * aspect / -2;
+        camera.right = frustumSize * aspect / 2;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize( window.innerWidth, window.innerHeight );
+    });
+    
     // renderer
     renderer = new THREE.WebGLRenderer(); renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
@@ -150,15 +150,23 @@ function init() {
     document.onkeyup = (e) => {
         if(controller[e.code]){    controller[e.code].pressed = false  }
     };
-    
-    // camera
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 2000);
-    camera.position.y = 50;
-    camera.position.z = 500;
+
+    // Create an orthographic camera
+    const aspect = window.innerWidth / window.innerHeight;
+    const frustumSize = 1000;
+    camera = new THREE.OrthographicCamera(
+        frustumSize * aspect / - 2, 
+        frustumSize * aspect / 2,
+        frustumSize / 2, 
+        frustumSize / - 2, 
+        1, 
+        1000
+    );
+    camera.position.z = 500; // Position the camera away from the square
 
     // lights
-    let pointLight1 = new THREE.PointLight(0xffffff, 5, 0, 0); pointLight1.position.set(300, 300, 300);
-    let pointLight2 = new THREE.PointLight(0xffffff, 1, 0, 0); pointLight2.position.set(-500, -500, -500);
+    let pointLight1 = new THREE.PointLight(0xffffff, 5, 0, 0); pointLight1.position.set(0, 0, 300);
+    let pointLight2 = new THREE.PointLight(0xffffff, 1, 0, 0); pointLight2.position.set(0, 0, -500);
 
     // axis
     axesHelper = new THREE.AxesHelper(1000);

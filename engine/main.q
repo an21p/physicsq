@@ -1,7 +1,6 @@
 system "l physics.q";
 system "p 5001";
 
-
 .z.ws:{
 	message:.j.k x;
 	action: `$message`action;
@@ -10,9 +9,10 @@ system "p 5001";
 
 	if[action~`loadPage; 
 		`state set initState[];
+		`time set .z.t;
 		`input set (0f;0f;0f);
 		sub[`getState;enlist `];
-		system "t 1";
+		system "t 30";
  	];
 
 	// if[action~`move; 
@@ -58,7 +58,7 @@ subs:2!flip `handle`func`params!"is*"$\:();
 
 initState:{ 
 	state: .physics.initWithPlane[]; 
-	: .physics.addRandomElements[state; 2]};
+	: .physics.addRandomElements[state; 50]};
 
 getState:{`func`result!(`getState; get `state)};
 
@@ -71,17 +71,16 @@ pub:{
 	(neg row[`handle]) .j.j (value row[`func])[row[`params]]
  };
 
-
-
 /* trigger refresh every 100ms */
 .z.ts:{
 	if [not `state~key `state; `state set .physics.initState[]];
-	nextInput: 0.0005f*.physics.normalise[value `input];
-	`state set .physics.updateState[state; nextInput];
+	if [not `time~key `time; `time set .z.t];
+	nextInput: 25f*.physics.normalise[value `input];
+	dt: (`float$.z.t-value `time)%1000*60;
+	`state set .physics.updateState[state; nextInput; dt];
 	if [not all 0 = value `input; `input set (0f;0f;0f);];
 	pub each til count subs;
 	};
-
 
 debug: {
 	`input set (0f;0f;0f);
