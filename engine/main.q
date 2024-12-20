@@ -59,7 +59,7 @@ subs:2!flip `handle`func`params!"is*"$\:();
 initState:{ 
 	state: .physics.initState[]; 
 	state: .physics.addBox[state]; 
-	: .physics.addRandomElements[state; 50]};
+	: .physics.addRandomElements[state; 20]};
 
 getState:{`func`result!(`getState; get `state)};
 

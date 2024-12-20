@@ -27,9 +27,9 @@ addBox: {[state]
 
 / add x random elemenents to state
 addRandomElements: {[state; x]
-    r: 15,20,25;
-    elements: ([] sym: (`$ string each til x);   // unique id
-                    shape: x?`sphere`plane;               
+    r: 15;
+    shperes: ([] sym: (`$ string each til x);   // unique id
+                    shape: x#`sphere;               
                     invM: 1%x#10;              // inverse mass up to 3
                     pX: -400+x?800;
                     pY: -400+x?800;
@@ -39,7 +39,19 @@ addRandomElements: {[state; x]
                     rX: x#0; rY: x#0; rZ: x#0;
                     sX: x#r; sY: x#r; sZ: x#r;
                     static: 0b);
-    state: state uj elements;
+    r: 25;
+    rectangles: ([] sym: (`$ string each x+til x);   // unique id
+                    shape: x#`plane;               
+                    invM: 1%x#10;              // inverse mass up to 3
+                    pX: -400+x?800;
+                    pY: -400+x?800;
+                    pZ: x#0; 
+                    vX: x#0; vY: x#0; vZ: x#0;
+                    fX: x#0; fY: x#0; fZ: x#0;
+                    rX: x#0; rY: x#0; rZ: x#0;
+                    sX: x#r; sY: x#r; sZ: x#r;
+                    static: 0b);
+    state: state uj rectangles uj shperes;
     :state};
 
 / return the current state

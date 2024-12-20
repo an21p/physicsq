@@ -44,12 +44,12 @@ function toDebugString(e) {
             <div>f:(x:${pad(e.fX)}, y:${pad(e.fY)}, z:${pad(e.fZ)})</div>`;
 }
 
-function createCircle(e, color = 0xa1a1a1) {
+function createCircle(e, color) {
     return new THREE.Mesh(
         new THREE.CircleGeometry(e.sX, 100), new THREE.MeshBasicMaterial({color: color}));
 }
 
-function createRectangle(e, color = 0xa1a1a1) {
+function createRectangle(e, color) {
     return new THREE.Mesh(
         new THREE.PlaneGeometry(e.sX, e.sY), new THREE.MeshBasicMaterial({color: color}));
 }
@@ -67,19 +67,21 @@ function setPositionAndRotation(o, e) {
 function addNewObjects(state) {
     state.forEach((element) => {
         if (element.sym in shapes) return;
+    
 
         let object; 
+        let color = 0xa1a1a1;
+        if (element.sym === "1") color = 0xff0000;
         
         switch (element.shape) {
             case "poly":
                 throw new Error("not implemented");
             case "plane":
-                object =  createRectangle(element)
+                object =  createRectangle(element,color)
                 break;
             case "shpere":
             default:
-                if (element.sym === "1") object = createCircle(element, 0xff0000);
-                else object = createCircle(element);
+                object = createCircle(element,color);
                 break;
         }
         setPositionAndRotation(object, element);
@@ -102,10 +104,6 @@ function addNewObjects(state) {
         object.add( objectLabel );
         objectLabel.layers.set( 0 );
     })
-}
-
-function render() {
-    renderer.render( scene, camera );
 }
 
 function update(state) {
@@ -198,7 +196,7 @@ function init() {
     controls = new OrbitControls( camera, labelRenderer.domElement );
     controls.listenToKeyEvents( window ); // optional
 
-    controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+    controls.addEventListener( 'change', () => {renderer.render( scene, camera )} ); // call this only in static scenes (i.e., if there is no animation loop)
     controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
     controls.dampingFactor = 0.05;
 
