@@ -41,6 +41,7 @@ function toDebugString(e) {
     
     return `<div>p:(x:${pad(e.pX,1)}, y:${pad(e.pY,1)}</div>
             <div>v:(x:${pad(e.vX)}, y:${pad(e.vY)}</div>
+            <div>v:(theta:${pad(e.theta)}</div>
             <div>f:(x:${pad(e.fX)}, y:${pad(e.fY)}</div>`;
 }
 
@@ -57,8 +58,7 @@ function createRectangle(e, color) {
 function setPositionAndRotation(o, e) {
     o.position.x = e.pX;
     o.position.y = e.pY;
-    o.rotation.x = e.rX;
-    o.rotation.y = e.rY;
+    o.rotation.x = e.theta;
     return o;
 }
 

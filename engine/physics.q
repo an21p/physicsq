@@ -5,13 +5,13 @@ PI:3.141592653589793238;
 gravity: 0; // -0.981f;
 
 // getters
-getState: {[state] select sym,shape,pX,pY,rX,rY,sX,sY from state };
+getState: {[state] select sym,shape,pX,pY,theta,sX,sY from state };
 getPositionVector: {[a] :a`pX`pY };
 getVelocityVector: {[a] :a`vX`vY };
 getForceVector:    {[a] :a`fX`fY };
-getRotationVector: {[a] :a`rX`rY };
 getSizeVector:     {[a] :a`sX`sY };
 
+// Utils
 // Normalise vector to magnitute 1
 // @param v vector
 // @return normalised vector
@@ -24,6 +24,10 @@ normalise: {[v] :0^v%sqrt sum v*v};
 // @param invMass => inverse of mass
 // @return acceleration vector
 acceleration: {[force; invMass] :force*invMass};
+
+transform: {[v;theta]
+    R: 2 2#cos theta, -1*sin theta, sin theta, cos theta;
+    :R mmu v};
 
 // Distance between spheres
 distanceSpheres: {[a;b] :sqrt sum v*v: getPositionVector[a]-getPositionVector[b]}
@@ -38,9 +42,9 @@ calculateAABB:{[state]
 
 
 // initialisation functions
-initState: {[] flip `sym`shape`invM`pX`pY`vX`vY`fX`fY`rX`rY`sX`sY`static!"ssfffffffffffb"$\:()};
+initState: {[] flip `sym`shape`invM`pX`pY`vX`vY`fX`fY`theta`sX`sY`static!"ssffffffffffb"$\:()};
 initWithPlane: { :addPlane[initState[]]};
-addPlane: {[state] :state upsert (`planeX;`plane;1%100f;0f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1b)};
+addPlane: {[state] :state upsert (`planeX;`plane;1%100f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1b)};
 addBox: {[state] 
     state: state upsert (`planeT;`plane;1%100f;   0f; 500f;0f;0f;0f;0f;0f;0f;1200f;  10f;1b);
     state: state upsert (`planeR;`plane;1%100f; 600f;   0f;0f;0f;0f;0f;0f;0f;  10f;1024f;1b);
@@ -56,7 +60,7 @@ addRandomElements: {[state; x]
                     pY: -400+x?800;
                     vX: x#0; vY: x#0;
                     fX: x#0; fY: x#0;
-                    rX: x#0; rY: x#0;
+                    theta: x#0;
                     sX: x#r; sY: x#r;
                     static: 0b);
     r: 25;
@@ -67,7 +71,7 @@ addRandomElements: {[state; x]
                     pY: -400+x?800;
                     vX: x#0; vY: x#0;
                     fX: x#0; fY: x#0; 
-                    rX: x#0; rY: x#0;
+                    theta: x#0;
                     sX: x#r; sY: x#r;
                     static: 0b);
     state: state uj rectangles uj shperes;

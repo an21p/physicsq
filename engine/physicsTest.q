@@ -7,9 +7,9 @@ trap: {[x]
 initSimpleMocked: {
     r:10f;
     mockState: .physics.initWithPlane[];
-    mockState: mockState upsert (`1;`sphere;1f;  -10f;10f;0f;0f;0f;0f;0f;0f;r;r;0b);
-    mockState: mockState upsert (`2;`sphere;1f;   10f;10f;0f;0f;0f;0f;0f;0f;r;r;0b);
-    mockState: mockState upsert (`3;`sphere;0f;-1000f;10f;0f;0f;0f;0f;0f;0f;r;r;0b); // no mass
+    mockState: mockState upsert (`1;`sphere;1f;  -10f;10f;0f;0f;0f;0f;0f;r;r;0b);
+    mockState: mockState upsert (`2;`sphere;1f;   10f;10f;0f;0f;0f;0f;0f;r;r;0b);
+    mockState: mockState upsert (`3;`sphere;0f;-1000f;10f;0f;0f;0f;0f;0f;r;r;0b); // no mass
     // apply force equal to -1*gravity to keep them at the same point
     mockState: update fY: -1* .physics.gravity from mockState;
     :mockState}
