@@ -16,16 +16,23 @@ initWithPlane: {
     state: addPlane[state];  
     :state};
 
-addPlane: {[state] :state upsert (`planeX;`plane;100f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1000f;1b)};
+addPlane: {[state] :state upsert (`planeX;`plane;1%100f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1000f;1b)};
+addBox: {[state] 
+    // state: state upsert (`planeX;`plane;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1000f;1b);
+    state: state upsert (`planeT;`plane;1%100f;0f;500f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1200f;10f;0f;1b);
+    state: state upsert (`planeR;`plane;1%100f;600f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;10f;1024f;0f;1b);
+    state: state upsert (`planeB;`plane;1%100f;0f;-500f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1200f;10f;0f;1b);
+    state: state upsert (`planeL;`plane;1%100f;-600f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;10f;1024f;0f;1b);
+    :state};
 
 / add x random elemenents to state
 addRandomElements: {[state; x]
-    r: 15;
+    r: 15,20,25;
     elements: ([] sym: (`$ string each til x);   // unique id
-                    shape: x#`sphere;               
+                    shape: x?`sphere`plane;               
                     invM: 1%x#10;              // inverse mass up to 3
                     pX: -400+x?800;
-                    pY: 40+x?200;
+                    pY: -400+x?800;
                     pZ: x#0; 
                     vX: x#0; vY: x#0; vZ: x#0;
                     fX: x#0; fY: x#0; fZ: x#0;

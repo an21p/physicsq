@@ -44,31 +44,45 @@ function toDebugString(e) {
             <div>f:(x:${pad(e.fX)}, y:${pad(e.fY)}, z:${pad(e.fZ)})</div>`;
 }
 
+function createCircle(e, color = 0xa1a1a1) {
+    return new THREE.Mesh(
+        new THREE.CircleGeometry(e.sX, 100), new THREE.MeshBasicMaterial({color: color}));
+}
+
+function createRectangle(e, color = 0xa1a1a1) {
+    return new THREE.Mesh(
+        new THREE.PlaneGeometry(e.sX, e.sY), new THREE.MeshBasicMaterial({color: color}));
+}
+
+function setPositionAndRotation(o, e) {
+    o.position.x = e.pX;
+    o.position.y = e.pY;
+    //o.position.z = e.pZ;   
+    o.rotation.x = e.rX;
+    o.rotation.y = e.rY;
+    //o.rotation.z = e.rZ;
+    return o;
+}
+
 function addNewObjects(state) {
     state.forEach((element) => {
         if (element.sym in shapes) return;
 
         let object; 
-        let color = 0xff0000;
         
         switch (element.shape) {
             case "poly":
                 throw new Error("not implemented");
             case "plane":
-                object = new THREE.Mesh(new THREE.PlaneGeometry(element.sX, element.sY), new THREE.MeshBasicMaterial({color: 0xa1a1a1}));   
+                object =  createRectangle(element)
                 break;
             case "shpere":
             default:
-                if (element.sym === "1") color = 0xa1a1a1;
-                object = new THREE.Mesh(new THREE.SphereGeometry(element.sX, element.sY, element.sZ), new THREE.MeshPhysicalMaterial({flatShading: true, color: color}));
+                if (element.sym === "1") object = createCircle(element, 0xff0000);
+                else object = createCircle(element);
                 break;
         }
-        object.position.x = element.pX;
-        object.position.y = element.pY;
-        object.position.z = element.pZ;   
-        object.rotation.x = element.rX;
-        object.rotation.y = element.rY;
-        object.rotation.z = element.rZ; 
+        setPositionAndRotation(object, element);
         shapes[element.sym] = object;
         object.layers.enableAll();
         scene.add(object);
@@ -87,7 +101,6 @@ function addNewObjects(state) {
         objectLabel.center.set( 0, 1 );
         object.add( objectLabel );
         objectLabel.layers.set( 0 );
-        objectLabel.visible = false;
     })
 }
 
@@ -107,7 +120,9 @@ function update(state) {
         label.element.innerHTML = toDebugString(element);
         object.position.x = element.pX;
         object.position.y = element.pY;
-        object.position.z = element.pZ;
+        label.visible = showDebugInfo;
+
+        // object.position.z = element.pZ;
     });
     addNewObjects(state);
 
@@ -200,9 +215,11 @@ const controller = {
     "KeyA" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "left"}`) },
     "KeyW" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "up"}`) },
     "KeyS" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "down"}`) },
-    "KeyC" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "in"}`) },
-    "KeyX" : {pressed: false, func: () =>  ws.send(`{"action": "move", "params": "out"}`) },
+    "KeyC" : {pressed: false, func: () =>  ws.send(`{"action": "create", "params": "circle"}`) },
+    "KeyX" : {pressed: false, func: () =>  ws.send(`{"action": "create", "params": "rectangle"}`) },
+    "KeyQ" : {pressed: false, func: () => showDebugInfo = !showDebugInfo },
 }
 let ws, renderer, controls, camera, axesHelper, scene, labelRenderer
 let shapes = {};
+let showDebugInfo = false;
 init();

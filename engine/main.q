@@ -40,12 +40,12 @@ system "p 5001";
 		if [direction~`left;
 			m: (-1f; 0f; 0f);
 		];
-		if [direction~`in;
-			m: (0f; 0f; 1f);
-		];
-		if [direction~`out;
-			m: (0f; 0f; -1f);
-		];
+		// if [direction~`in;
+		// 	m: (0f; 0f; 1f);
+		// ];
+		// if [direction~`out;
+		// 	m: (0f; 0f; -1f);
+		// ];
 
 		`input set input+m;
  	];
@@ -57,7 +57,8 @@ system "p 5001";
 subs:2!flip `handle`func`params!"is*"$\:();
 
 initState:{ 
-	state: .physics.initWithPlane[]; 
+	state: .physics.initState[]; 
+	state: .physics.addBox[state]; 
 	: .physics.addRandomElements[state; 50]};
 
 getState:{`func`result!(`getState; get `state)};
