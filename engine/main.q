@@ -10,7 +10,7 @@ system "p 5001";
 	if[action~`loadPage; 
 		`state set initState[];
 		`time set .z.t;
-		`input set (0f;0f;0f);
+		`input set (0f;0f);
 		sub[`getState;enlist `];
 		system "t 30";
  	];
@@ -24,28 +24,22 @@ system "p 5001";
 	if[action~`move; 
 		direction: `$message`params;
 		input: value `input;
-		m: (0f; 0f; 0f);
+		m: (0f; 0f);
 
 		//show direction;
 
 		if [direction~`up;
-			m: (0f; 1f; 0f);
+			m: (0f; 1f);
 		];
 		if [direction~`down;
-			m: (0f; -1f; 0f);
+			m: (0f; -1f);
 		];
 		if [direction~`right;
-			m: (1f; 0f; 0f);
+			m: (1f; 0f);
 		];
 		if [direction~`left;
-			m: (-1f; 0f; 0f);
+			m: (-1f; 0f);
 		];
-		// if [direction~`in;
-		// 	m: (0f; 0f; 1f);
-		// ];
-		// if [direction~`out;
-		// 	m: (0f; 0f; -1f);
-		// ];
 
 		`input set input+m;
  	];
@@ -79,12 +73,12 @@ pub:{
 	nextInput: 25f*.physics.normalise[value `input];
 	dt: (`float$.z.t-value `time)%1000*60;
 	`state set .physics.updateState[state; nextInput; dt];
-	if [not all 0 = value `input; `input set (0f;0f;0f);];
+	if [not all 0 = value `input; `input set (0f;0f);];
 	pub each til count subs;
 	};
 
 debug: {
-	`input set (0f;0f;0f);
+	`input set (0f;0f);
 	st: initState[];
 	show st;
 	st: .physics.updateState[st;input];

@@ -39,9 +39,9 @@ function pad(num, scale=1000) {
 function toDebugString(e) {
     // console.log('0'+pad(e.pX));
     
-    return `<div>p:(x:${pad(e.pX,1)}, y:${pad(e.pY,1)}, z:${pad(e.pZ,1)})</div>
-            <div>v:(x:${pad(e.vX)}, y:${pad(e.vY)}, z:${pad(e.vZ)})</div>
-            <div>f:(x:${pad(e.fX)}, y:${pad(e.fY)}, z:${pad(e.fZ)})</div>`;
+    return `<div>p:(x:${pad(e.pX,1)}, y:${pad(e.pY,1)}</div>
+            <div>v:(x:${pad(e.vX)}, y:${pad(e.vY)}</div>
+            <div>f:(x:${pad(e.fX)}, y:${pad(e.fY)}</div>`;
 }
 
 function createCircle(e, color) {
@@ -57,10 +57,8 @@ function createRectangle(e, color) {
 function setPositionAndRotation(o, e) {
     o.position.x = e.pX;
     o.position.y = e.pY;
-    //o.position.z = e.pZ;   
     o.rotation.x = e.rX;
     o.rotation.y = e.rY;
-    //o.rotation.z = e.rZ;
     return o;
 }
 
@@ -119,8 +117,6 @@ function update(state) {
         object.position.x = element.pX;
         object.position.y = element.pY;
         label.visible = showDebugInfo;
-
-        // object.position.z = element.pZ;
     });
     addNewObjects(state);
 

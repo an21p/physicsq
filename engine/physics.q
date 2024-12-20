@@ -3,26 +3,25 @@ system "d .physics"
 PI:3.141592653589793238;
 gravity: 0f; // -0.981f;
 
-initState: {[] flip `sym`shape`invM`pX`pY`pZ`vX`vY`vZ`fX`fY`fZ`rX`rY`rZ`sX`sY`sZ`static!"ssffffffffffffffffb"$\:()};
+initState: {[] flip `sym`shape`invM`pX`pY`vX`vY`fX`fY`rX`rY`sX`sY`static!"ssfffffffffffb"$\:()};
 
-getPositionVector: {[a] :a`pX`pY`pZ };
-getVelocityVector: {[a] :a`vX`vY`vZ };
-getForceVector:    {[a] :a`fX`fY`fZ };
-getRotationVector: {[a] :a`rX`rY`rZ };
-getSizeVector:     {[a] :a`sX`sY`sZ };
+getPositionVector: {[a] :a`pX`pY };
+getVelocityVector: {[a] :a`vX`vY };
+getForceVector:    {[a] :a`fX`fY };
+getRotationVector: {[a] :a`rX`rY };
+getSizeVector:     {[a] :a`sX`sY };
 
 initWithPlane: { 
     state: initState[];  
     state: addPlane[state];  
     :state};
 
-addPlane: {[state] :state upsert (`planeX;`plane;1%100f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1000f;1b)};
+addPlane: {[state] :state upsert (`planeX;`plane;1%100f;0f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1b)};
 addBox: {[state] 
-    // state: state upsert (`planeX;`plane;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1000f;1b);
-    state: state upsert (`planeT;`plane;1%100f;0f;500f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1200f;10f;0f;1b);
-    state: state upsert (`planeR;`plane;1%100f;600f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;10f;1024f;0f;1b);
-    state: state upsert (`planeB;`plane;1%100f;0f;-500f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;1200f;10f;0f;1b);
-    state: state upsert (`planeL;`plane;1%100f;-600f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;0f;10f;1024f;0f;1b);
+    state: state upsert (`planeT;`plane;1%100f;   0f; 500f;0f;0f;0f;0f;0f;0f;1200f;  10f;1b);
+    state: state upsert (`planeR;`plane;1%100f; 600f;   0f;0f;0f;0f;0f;0f;0f;  10f;1024f;1b);
+    state: state upsert (`planeB;`plane;1%100f;   0f;-500f;0f;0f;0f;0f;0f;0f;1200f;  10f;1b);
+    state: state upsert (`planeL;`plane;1%100f;-600f;   0f;0f;0f;0f;0f;0f;0f;  10f;1024f;1b);
     :state};
 
 / add x random elemenents to state
@@ -33,11 +32,10 @@ addRandomElements: {[state; x]
                     invM: 1%x#10;              // inverse mass up to 3
                     pX: -400+x?800;
                     pY: -400+x?800;
-                    pZ: x#0; 
-                    vX: x#0; vY: x#0; vZ: x#0;
-                    fX: x#0; fY: x#0; fZ: x#0;
-                    rX: x#0; rY: x#0; rZ: x#0;
-                    sX: x#r; sY: x#r; sZ: x#r;
+                    vX: x#0; vY: x#0;
+                    fX: x#0; fY: x#0;
+                    rX: x#0; rY: x#0;
+                    sX: x#r; sY: x#r;
                     static: 0b);
     r: 25;
     rectangles: ([] sym: (`$ string each x+til x);   // unique id
@@ -45,35 +43,35 @@ addRandomElements: {[state; x]
                     invM: 1%x#10;              // inverse mass up to 3
                     pX: -400+x?800;
                     pY: -400+x?800;
-                    pZ: x#0; 
-                    vX: x#0; vY: x#0; vZ: x#0;
-                    fX: x#0; fY: x#0; fZ: x#0;
-                    rX: x#0; rY: x#0; rZ: x#0;
-                    sX: x#r; sY: x#r; sZ: x#r;
+                    vX: x#0; vY: x#0;
+                    fX: x#0; fY: x#0; 
+                    rX: x#0; rY: x#0;
+                    sX: x#r; sY: x#r;
                     static: 0b);
     state: state uj rectangles uj shperes;
     :state};
 
 / return the current state
-getState: {[state] select sym,shape,pX,pY,pZ,rX,rY,rZ,sX,sY,sZ from state };
+getState: {[state] select sym,shape,pX,pY,rX,rY,sX,sY from state };
 
 acceleration: {[force; invMass] :force*invMass};
 
 updatePositionsAndVelocities: {[state; dt]
-    / 1. Update velocity for X, Y, Z components    
+    / 1. Update velocity for X, Y components    
     state: update vX:vX+dt*.physics.acceleration[fX;invM], 
-                  vY:vY+dt*.physics.acceleration[.physics.gravity+fY;invM],
-                  vZ:vZ+dt*.physics.acceleration[fZ;invM]
+                  vY:vY+dt*.physics.acceleration[.physics.gravity+fY;invM]
             from state where static = 0b;
-    / 2. Update position for X, Y, Z components 
-    state: update pX:pX+vX, pY:pY+vY, pZ:pZ+vZ from state;
-    :state};
+    / 2. Update position for X, Y components 
+    state: update pX:pX+vX, pY:pY+vY from state;
 
-    / 3. Update angular velocity for X, Y, Z components 
+    / 3. Update angular velocity for X, Y components 
     / 4. Update rotation for X, Y, Z components (mod by 2π)
             // float angularAcceleration = rigidBody->torque / rigidBody->shape.momentOfInertia;
             // rigidBody->angularVelocity += angularAcceleration * dt;
             // rigidBody->angle += rigidBody->angularVelocity * dt;
+    :state};
+
+
 
 updatePositionsAndVelocitiesWithInput: {[state; input; dt]
     // show "xx",input;
@@ -81,25 +79,25 @@ updatePositionsAndVelocitiesWithInput: {[state; input; dt]
     acc: .physics.acceleration[input;invM];
     aX: (acc 0);
     aY: (acc 1);
-    aZ: (acc 2);
 
-    / 1. Update velocity for X, Y, Z components 
-    state: update vX:vX+dt*aX, vY:vY+dt*aY, vZ:vZ+dt*aZ from state where sym = `1;   
-    / 2. Update position for X, Y, Z components 
-    state: update pX:pX+dt*vX, pY:pY+dt*vY, pZ:pZ+dt*vZ from state where sym = `1;   
+    / 1. Update velocity for X, Y components 
+    state: update vX:vX+dt*aX, vY:vY+dt*aY from state where sym = `1;   
+    / 2. Update position for X, Y components 
+    state: update pX:pX+dt*vX, pY:pY+dt*vY from state where sym = `1;   
     :state};
+
 
 / Calculate AABB for all objects
 calculateAABB:{[state] 
     // spheres
-    state: update minX:pX-sX, maxX:pX+sX, minY:pY-sY, maxY:pY+sY, minZ:pZ-sZ, maxZ:pZ+sZ from state;
+    state: update minX:pX-sX, maxX:pX+sX, minY:pY-sY, maxY:pY+sY from state;
     :state};
+
 
 // Normalise vector to magnitute 1
 // @param v vector
 // @return normalised vector
 normalise: {[v] :0^v%sqrt sum v*v}
-
 distanceSpheres: {[a;b] :sqrt sum v*v: getPositionVector[a]-getPositionVector[b]}
 
 / Sort and Sweep collision detection
@@ -135,8 +133,6 @@ sortAndSweepCollision:{[state]
             if[ (b`minX) < a`maxX;
                 (a`maxY) > b`minY;
                 (a`minY) < b`maxY;
-                (a`maxZ) > b`minZ;
-                (a`minZ) < b`maxZ;
                 bothStatic ~ 0b;
                 overlappingPairs: overlappingPairs upsert (a`sym;b`sym;a`shape;b`shape);
             ];
@@ -155,10 +151,8 @@ intersectSpheres: {[pair]
         sym: `symbol$(); 
         pXn: `float$(); 
         pYn: `float$(); 
-        pZn: `float$();
         vXn: `float$(); 
-        vYn: `float$(); 
-        vZn: `float$());
+        vYn: `float$());
     // if [0~ count pair; :result];
 
     a:pair 0;
@@ -192,9 +186,10 @@ intersectSpheres: {[pair]
         velA: -1 * impulse * a`invM;
         velB: impulse * b`invM];
 
-    result: result upsert ((a`sym);(moveA 0);(moveA 1);(moveA 2); (velA 0);(velA 1);(velA 2));
-    result: result upsert ((b`sym);(moveB 0);(moveB 1);(moveB 2); (velB 0);(velB 1);(velB 2));
+    result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1));
+    result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1));
     :result}
+
 
 calculateImpulse: {[a;b;normal] 
     resitution: 0.1f; 
@@ -220,9 +215,9 @@ resolveCollisions: {[state; pairs]
             tmpState: state lj `sym xkey transformations;
             //show transformations;
             // adjust position in case of intersection
-            tmpState: delete pXn,pYn,pZn from update pX:pX+pXn, pY:pY+pYn, pZ:pZ+pZn from tmpState where not pXn=0n;
+            tmpState: delete pXn,pYn from update pX:pX+pXn, pY:pY+pYn from tmpState where not pXn=0n;
             // apply new velocity
-            state: delete vXn,vYn,vZn from update vX:vX+vXn, vY:vY+vYn, vZ:vZ+vZn from tmpState where not vXn=0n;
+            state: delete vXn,vYn from update vX:vX+vXn, vY:vY+vYn from tmpState where not vXn=0n;
         ];
         i+:1;
     ];
