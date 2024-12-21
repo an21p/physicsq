@@ -11,7 +11,7 @@ initSimpleMocked: {
     mockState: mockState upsert (`2;`sphere;1f;   10f;10f;0f;0f;0f;0f;0f;r;r;0b);
     mockState: mockState upsert (`3;`sphere;0f;-1000f;10f;0f;0f;0f;0f;0f;r;r;0b); // no mass
     // apply force equal to -1*gravity to keep them at the same point
-    mockState: update fY: -1* .physics.gravity from mockState;
+    mockState: update aY: -1* .physics.gravity from mockState;
     :mockState}
 
 initCollidingBoxes: {
@@ -20,7 +20,7 @@ initCollidingBoxes: {
     mockState: mockState upsert (`4;`plane;1f; 205f;205f;0f;0f;0f;0f;0f;r;r;0b);
     mockState: mockState upsert (`5;`plane;1f; 200f;200f;0f;0f;0f;0f;0f;r;r;0b);
     // apply force equal to -1*gravity to keep them at the same point
-    mockState: update fY: -1* .physics.gravity from mockState;
+    mockState: update aY: -1* .physics.gravity from mockState;
     :mockState}
 
 initColliding: {
@@ -29,7 +29,7 @@ initColliding: {
     mockState: mockState upsert (`4;`sphere;1f; 205f;201f;0f;0f;0f;0f;0f;r;r;0b);
     mockState: mockState upsert (`5;`plane;1f; 200f;200f;0f;0f;0f;0f;0f;r;r;0b);
     // apply force equal to -1*gravity to keep them at the same point
-    mockState: update fY: -1* .physics.gravity from mockState;
+    mockState: update aY: -1* .physics.gravity from mockState;
     :mockState}
 
 testInitSize:{ .qunit.assertEquals[count .physics.initWithPlane[] ; 1; "init state has 1 element"]; :`pass};		
@@ -52,37 +52,37 @@ testUpdateNoForce:{
     :`pass}
 
 testUpdateForce:{
-    mockState: .physicsTest.initSimpleMocked[];
+    show mockState: .physicsTest.initSimpleMocked[];
 
     // apply force of 1 on x-axis to all 
     // velocity should increment by 1
     // position should increment by 1
-    mockState: update fX: 1f from mockState where shape=`sphere;
-    s1v: update vX:vX+.physics.acceleration[fX;invM] from mockState;
+    mockState: update aX: 1f from mockState where shape=`sphere;
+    s1v: update vX:vX+aX from mockState;
     s1p: update pX:pX+vX from s1v;
-    s1e: select sym,pX,pY,vX,vY from s1p;
+    s1e: select sym,pX,vX from s1p;
     mockState: .physics.updatePositionsAndVelocities[mockState;1];
-    s1actual: select sym,pX,pY,vX,vY from mockState;
+    s1actual: select sym,pX,vX from mockState;
     .qunit.assertEquals[s1actual; s1e; "moves based on x force"];
 
     // stop applying force
     // velocity stays the same
     // position should increment by 1
-    mockState: update fX: 0f from mockState where shape=`sphere;
+    mockState: update aX: 0f from mockState where shape=`sphere;
     s2p: update pX:pX+vX from mockState;
-    s2e: select sym,pX,pY,vX,vY from s2p;
+    s2e: select sym,pX,vX from s2p;
     mockState: .physics.updatePositionsAndVelocities[mockState;1];
-    s2actual: select sym,pX,pY,vX,vY from mockState;
+    s2actual: select sym,pX,vX from mockState;
     .qunit.assertEquals[s2actual; s2e; "moves based on velocity"];
 
 
     // apply force of -1 on x-axis to all 
     // velocity decrements by 1
     // position stays the same
-    mockState: update fX: -1f from mockState where shape=`sphere;
+    mockState: update aX: -1f from mockState where shape=`sphere;
     s3e: update vX:0 from s2e;
     mockState: .physics.updatePositionsAndVelocities[mockState;1];
-    s3actual: select sym,pX,pY,vX,vY from mockState;
+    s3actual: select sym,pX,vX from mockState;
     .qunit.assertEquals[s3actual; s3e; "no moves (velocity back to 0)"];
 
     :`pass}
@@ -133,20 +133,16 @@ testCollisionsPlanes: {[]
     :`pass}
 
 testCollisionsBoxCircle: {[]
-    show mockState: .physicsTest.initColliding[];
-    
+    mockState: .physicsTest.initColliding[];
     pairs: .physics.sortAndSweepCollision[mockState];
     s1: .physics.resolveCollisions[mockState;pairs];
-    show s1r: select sym, pX, pY from s1;
+    s1r: select sym, pX, pY from s1;
     s1expected: ([] sym:`4`5; pX:215,190; pY:201,200);
 
     .qunit.assertEquals[s1r; s1expected; "correct placement post collision"];
-
-
     :`pass}
 
 testCollisionDetectionNoCollision: {[]
-    show "testCollisionDetectionNoCollision";
     mockState: .physicsTest.initSimpleMocked[];
     mockState: update pX: -11f, vX: 1f, fX: 0f from mockState where sym=`1;
 
@@ -157,21 +153,15 @@ testCollisionDetectionNoCollision: {[]
     :`pass}
 
 testCollisionDetectionEdge: {[]
-    show "testCollisionDetectionEdge";
-
     mockState: .physicsTest.initSimpleMocked[];
-
     pairs: .physics.sortAndSweepCollision[mockState];
     collidingSpheres: select from pairs where aShape = `sphere, bShape = `sphere;
     .qunit.assertEquals[count collidingSpheres; 0; "should contain no collisions"];
     :`pass}
 
 testCollisionDetectionSortAndSweep: {[]
-    show "testCollisionDetectionSortAndSweep";
-
     mockState: .physicsTest.initSimpleMocked[];
     mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
-
     pairs: .physics.sortAndSweepCollision[mockState];
     collidingSpheres: select from pairs where aShape = `sphere, bShape = `sphere;
     .qunit.assertEquals[count collidingSpheres; 1; "should contain 1 collision"];
@@ -180,22 +170,19 @@ testCollisionDetectionSortAndSweep: {[]
     :`pass}
 
 testCollisionSpheres: {[]
-    show "testCollisionSpheres";
-
     mockState: .physicsTest.initSimpleMocked[];
     mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
     // mockState: update pX: 19f, vX: 1f, fX: 0f from mockState where sym=`3;
-    show s1: .physics.checkCollisions[mockState];
-    show s2: .physics.checkCollisions[s1];
-    //.qunit.assertEquals[; ; "should contain 1 collision"];
-    :`fail;
+    s1: .physics.checkCollisions[mockState];
+    s1r: select sym, pX, pY from s1 where sym in `1`2;
+    s1expected: ([] sym:`1`2; pX:-10,11; pY:10.5,10.5);
+    .qunit.assertEquals[s1r; s1expected; "correct placement post collision"];
     :`pass}
 
 
 testNormalise: {[]
     nv: .physics.normalise[(9;0;0f)];
     .qunit.assertEquals[nv; (1f;0f;0f); "correct normaliseation"];
-
     :`pass}
 
 testDistnaceSpheres: {[]

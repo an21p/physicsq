@@ -2,13 +2,18 @@ system "d .physics"
 
 // constants
 PI:3.141592653589793238;
-gravity: -0.981f;
+gravity: -1; //-9.81f;
+restitution: 0.5f;
+defaultCircleRadius: 20f;
+defaultCircleMass: 50f;
+defaultBoxWidth: 40f;
+defaultBoxMass: 20f;
 
 // getters
 getState: {[state] :select sym,shape,pX,pY,theta,sX,sY from state };
 getPositionVector: {[a] :a`pX`pY };
 getVelocityVector: {[a] :a`vX`vY };
-getForceVector:    {[a] :a`fX`fY };
+getAccelerationVector:    {[a] :a`aX`aY };
 getSizeVector:     {[a] :a`sX`sY };
 emptyIntersectResult: {:([] sym: `symbol$(); pXn: `float$(); pYn: `float$(); vXn: `float$(); vYn: `float$())};
 
@@ -84,35 +89,35 @@ generatePostCollisionTransformations: {[a;b;normal;depth]
 
 
 // initialisation functions
-initState: {[] flip `sym`shape`invM`pX`pY`vX`vY`fX`fY`theta`sX`sY`static!"ssffffffffffb"$\:()};
+initState: {[] flip `sym`shape`invM`pX`pY`vX`vY`aX`aY`theta`sX`sY`static!"ssffffffffffb"$\:()};
 initWithPlane: { :addPlane[initState[]]};
 addPlane: {[state] :state upsert (`planeX;`plane;1%100f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1b)};
 addBox: {[state] 
     state: state upsert (`planeT;`plane;0f;   0f; 600f;0f;0f;0f;0f;0f;1300f;100f;1b);
     state: state upsert (`planeR;`plane;0f; 700f;   0f;0f;0f;0f;0f;0f;100f;1300f;1b);
-    state: state upsert (`planeB;`plane;0f;   0f;-600f;0f;0f;0f;0f;0f;1300f;100f;1b);
+    state: state upsert (`planeB;`plane;0f;   0f;-600f;0f;0f;0f;0f;0f;1500f;500f;1b);
     state: state upsert (`planeL;`plane;0f;-700f;   0f;0f;0f;0f;0f;0f;100f;1300f;1b);
     :state};
 addRandomElements: {[state; x]
-    r: 15;
+    r: defaultCircleRadius;
     shperes: ([] sym: (`$ string each til x);   // unique id
                     shape: x#`sphere;               
-                    invM: 1%x#10;              // inverse mass up to 3
+                    invM: 1% x#defaultCircleMass;              // inverse mass
                     pX: -400+x?800;
-                    pY: -400+x?800;
+                    pY: -300+x?800;
                     vX: x#0; vY: x#0;
-                    fX: x#0; fY: x#0;
+                    aX: x#0; aY: x#0;
                     theta: x#0;
                     sX: x#r; sY: x#r;
                     static: 0b);
-    r: 25;
+    r: defaultBoxWidth;
     rectangles: ([] sym: (`$ string each x+til x);   // unique id
                     shape: x#`plane;               
-                    invM: 1%x#10;              // inverse mass up to 3
+                    invM: 1% x#defaultBoxMass;              // inverse mass
                     pX: -400+x?800;
-                    pY: -400+x?800;
+                    pY: -300+x?800;
                     vX: x#0; vY: x#0;
-                    fX: x#0; fY: x#0; 
+                    aX: x#0; aY: x#0; 
                     theta: x#0;
                     sX: x#r; sY: x#r;
                     static: 0b);
@@ -128,10 +133,10 @@ checkCollisions: {[state]
     :state};
 
 calculateImpulse: {[a;b;normal] 
-    resitution: 0.5f; 
+    resitution: value `.physics.restitution; 
     relativeVelocity: getVelocityVector[b]-getVelocityVector[a];
     j: -1*(1f+resitution) * (relativeVelocity mmu normal);
-    :normal *j % (a`invM)+b`invM};
+    :normal*j % (a`invM)+b`invM};
 
 
 intersectBoxCircle: {[pair] 
@@ -208,7 +213,7 @@ intersectBoxCircle: {[pair]
 
     // if already moving away from each other then return
     relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
+    if [0f <= relativeVelocity mmu normal; :emptyIntersectResult[]];
 
 
     :generatePostCollisionTransformations[a;b;normal;depth]};
@@ -289,7 +294,7 @@ intersectPlanes: {[pair]
 
     // if already moving away from each other then return
     relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
+    if [0f <= relativeVelocity mmu normal; :emptyIntersectResult[]];
 
     :generatePostCollisionTransformations[a;b;normal;depth]};
 
@@ -311,7 +316,7 @@ intersectCircle: {[pair]
 
     // if already moving away from each other then return
     relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
+    if [0f <= relativeVelocity mmu normal; :emptyIntersectResult[]];
     
     :generatePostCollisionTransformations[a;b;normal;depth]};
 
@@ -420,8 +425,8 @@ updateState: {[dict]
 
 updatePositionsAndVelocities: {[state; dt]
     / 1. Update velocity for X, Y components    
-    state: update vX:vX+dt*.physics.acceleration[fX;invM], 
-                  vY:vY+dt*.physics.acceleration[.physics.gravity+fY;invM]
+    state: update vX:vX+dt*aX, 
+                  vY:vY+dt*(.physics.gravity+aY)
             from state where static = 0b;
     / 2. Update position for X, Y components 
     state: update pX:pX+vX, pY:pY+vY from state;
@@ -437,13 +442,13 @@ updatePositionsAndVelocities: {[state; dt]
 
 updatePositionsAndVelocitiesWithInput: {[state; input; dt]
     // show "xx",input;
-    invM: first value first select invM from state where sym=`1;
+    invM: first exec invM from state where sym=`1;
     acc: .physics.acceleration[input;invM];
-    aX: (acc 0);
-    aY: (acc 1);
+    aXin: (acc 0);
+    aYin: (acc 1);
 
     / 1. Update velocity for X, Y components 
-    state: update vX:vX+dt*aX, vY:vY+dt*aY from state where sym = `1;   
+    state: update vX:vX+dt*aXin, vY:vY+dt*aYin from state where sym = `1;   
     / 2. Update position for X, Y components 
     state: update pX:pX+dt*vX, pY:pY+dt*vY from state where sym = `1;   
     :state};

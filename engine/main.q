@@ -11,9 +11,10 @@ system "p 5001";
 		`state set initState[];
 		`time set .z.t;
 		`input set (0f;0f);
+		`.physics.restitution set 0.9f;
 		sub[`getState;enlist `];
 		// system "t 30";
-		system "t 10";
+		system "t 1";
  	];
 
 	// if[action~`move; 
@@ -54,7 +55,7 @@ subs:2!flip `handle`func`params!"is*"$\:();
 initState:{ 
 	state: .physics.initState[]; 
 	state: .physics.addBox[state]; 
-	: .physics.addRandomElements[state; 20]};
+	: .physics.addRandomElements[state; 10]};
 
 getState:{`func`result!(`getState; get `state)};
 
@@ -71,8 +72,11 @@ pub:{
 .z.ts:{
 	if [not `state~key `state; `state set initState[]];
 	if [not `time~key `time; `time set .z.t];
-	nextInput: 5f*.physics.normalise[value `input];
-	dt: (`float$.z.t-value `time)%1000*60;
+	nextInput: 100f*.physics.normalise[value `input];
+	now: .z.t;
+	dt: (`float$now-value `time)%100;
+	`time set now;
+	//show  "dt:",string dt;
 	dict: (`state`input`dt)!(value `state;nextInput;dt);
 	nextState: .Q.trp[.physics.updateState;dict;{2"error: ",x,"\nbacktrace:\n",.Q.sbt [y];value `state}];
 	`state set nextState;
