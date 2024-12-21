@@ -12,6 +12,7 @@ system "p 5001";
 		`time set .z.t;
 		`input set (0f;0f);
 		sub[`getState;enlist `];
+		// system "t 30";
 		system "t 30";
  	];
 
@@ -68,11 +69,13 @@ pub:{
 
 /* trigger refresh every 100ms */
 .z.ts:{
-	if [not `state~key `state; `state set .physics.initState[]];
+	if [not `state~key `state; `state set initState[]];
 	if [not `time~key `time; `time set .z.t];
 	nextInput: 25f*.physics.normalise[value `input];
 	dt: (`float$.z.t-value `time)%1000*60;
-	`state set .physics.updateState[state; nextInput; dt];
+	dict: (`state`input`dt)!(value `state;nextInput;dt);
+	nextState: .Q.trp[.physics.updateState;dict;{2"error: ",x,"\nbacktrace:\n",.Q.sbt [y];value `state}];
+	`state set nextState;
 	if [not all 0 = value `input; `input set (0f;0f);];
 	pub each til count subs;
 	};
