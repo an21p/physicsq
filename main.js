@@ -75,6 +75,7 @@ function addNewObjects(state) {
             case "poly":
                 throw new Error("not implemented");
             case "plane":
+                if (element.sym.startsWith("plane")) color = 0xdede01
                 object =  createRectangle(element,color)
                 break;
             case "shpere":
@@ -171,7 +172,8 @@ function init() {
         1, 
         1000
     );
-    camera.position.z = 500; // Position the camera away from the square
+    camera.position.z = 10; // Position the camera away from the square
+    // camera.position.z = 500; // Position the camera away from the square
 
     // lights
     let pointLight1 = new THREE.PointLight(0xffffff, 5, 0, 0); pointLight1.position.set(0, 0, 300);

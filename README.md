@@ -1,4 +1,4 @@
 - collisions
 - angular momentum
 - mass
-- change plane to box
+- change plane to box and sphere to circle

@@ -13,7 +13,7 @@ system "p 5001";
 		`input set (0f;0f);
 		sub[`getState;enlist `];
 		// system "t 30";
-		system "t 30";
+		system "t 10";
  	];
 
 	// if[action~`move; 
@@ -71,7 +71,7 @@ pub:{
 .z.ts:{
 	if [not `state~key `state; `state set initState[]];
 	if [not `time~key `time; `time set .z.t];
-	nextInput: 25f*.physics.normalise[value `input];
+	nextInput: 5f*.physics.normalise[value `input];
 	dt: (`float$.z.t-value `time)%1000*60;
 	dict: (`state`input`dt)!(value `state;nextInput;dt);
 	nextState: .Q.trp[.physics.updateState;dict;{2"error: ",x,"\nbacktrace:\n",.Q.sbt [y];value `state}];

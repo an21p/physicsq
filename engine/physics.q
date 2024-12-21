@@ -2,14 +2,15 @@ system "d .physics"
 
 // constants
 PI:3.141592653589793238;
-gravity: 0; // -0.981f;
+gravity: -0.981f;
 
 // getters
-getState: {[state] select sym,shape,pX,pY,theta,sX,sY from state };
+getState: {[state] :select sym,shape,pX,pY,theta,sX,sY from state };
 getPositionVector: {[a] :a`pX`pY };
 getVelocityVector: {[a] :a`vX`vY };
 getForceVector:    {[a] :a`fX`fY };
 getSizeVector:     {[a] :a`sX`sY };
+emptyIntersectResult: {:([] sym: `symbol$(); pXn: `float$(); pYn: `float$(); vXn: `float$(); vYn: `float$())};
 
 // Utils
 /tab : the table to operate on
@@ -43,7 +44,8 @@ acceleration: {[force; invMass] :force*invMass};
 transform: {[v;theta] R: 2 2#(cos theta; -1*sin theta; sin theta; cos theta); :R mmu v};
 
 // Distance between spheres
-distanceSpheres: {[a;b] :sqrt sum v*v: getPositionVector[a]-getPositionVector[b]}
+distanceR: {[a;b] :sqrt sum v*v: getPositionVector[a]-getPositionVector[b]}
+distanceV: {[v1;v2] :sqrt sum v*v: v1-v2}
 
 / Calculate AABB for all objects
 calculateAABB:{[state] 
@@ -54,16 +56,42 @@ calculateAABB:{[state]
     
     :state};
 
+generatePostCollisionTransformations: {[a;b;normal;depth]
+    impulse: calculateImpulse[a;b;normal];
+    result: emptyIntersectResult[];
+    if [0b~b`static;
+        1b~a`static;
+        moveB: normal * depth;
+        velB: impulse * b`invM;
+        result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1))];
+
+    if [0b~a`static;
+        1b~b`static;
+        moveA: -1 * normal * depth;
+        velA: -1 * impulse * a`invM;
+        result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1))];
+
+    if [0b~a`static;
+        0b~b`static;
+        moveB: normal * depth%2;
+        moveA: -1 * moveB;
+        velA: -1 * impulse * a`invM;
+        velB: impulse * b`invM;
+        result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1));
+        result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1))];
+
+    :result};
+
 
 // initialisation functions
 initState: {[] flip `sym`shape`invM`pX`pY`vX`vY`fX`fY`theta`sX`sY`static!"ssffffffffffb"$\:()};
 initWithPlane: { :addPlane[initState[]]};
 addPlane: {[state] :state upsert (`planeX;`plane;1%100f;0f;0f;0f;0f;0f;0f;0f;1000f;1f;1b)};
 addBox: {[state] 
-    state: state upsert (`planeT;`plane;1%100f;   0f; 600f;0f;0f;0f;0f;0f;1300f;100f;1b);
-    state: state upsert (`planeR;`plane;1%100f; 700f;   0f;0f;0f;0f;0f;0f;100f;1300f;1b);
-    state: state upsert (`planeB;`plane;1%100f;   0f;-600f;0f;0f;0f;0f;0f;1300f;100f;1b);
-    state: state upsert (`planeL;`plane;1%100f;-700f;   0f;0f;0f;0f;0f;0f;100f;1300f;1b);
+    state: state upsert (`planeT;`plane;0f;   0f; 600f;0f;0f;0f;0f;0f;1300f;100f;1b);
+    state: state upsert (`planeR;`plane;0f; 700f;   0f;0f;0f;0f;0f;0f;100f;1300f;1b);
+    state: state upsert (`planeB;`plane;0f;   0f;-600f;0f;0f;0f;0f;0f;1300f;100f;1b);
+    state: state upsert (`planeL;`plane;0f;-700f;   0f;0f;0f;0f;0f;0f;100f;1300f;1b);
     :state};
 addRandomElements: {[state; x]
     r: 15;
@@ -106,11 +134,87 @@ calculateImpulse: {[a;b;normal]
     :normal *j % (a`invM)+b`invM};
 
 
-intersectSP: {[pair] :result: ([] sym: `symbol$();  pXn: `float$(); pYn: `float$(); vXn: `float$(); vYn: `float$());};
+intersectBoxCircle: {[pair] 
+    // Separating Axis Theorem (SAT)
+    pair: update left: pX+sX%-2, bottom: pY+sY%-2 from pair;
+    pair: update right: sX+left, top: sY+bottom from pair;
+    pair: update LT: enlist'[left;top],
+                 TR: enlist'[right;top], 
+                 RB: enlist'[right;bottom], 
+                 BL: enlist'[left;bottom] 
+                from pair where shape=`plane;
+
+    vertices: unpivot[select sym,LT,TR,RB,BL from pair where shape=`plane;`sym;`LT`TR`RB`BL;`vertex;`vector ];
+
+    a:pair 0; // box
+    b:pair 1; // circle
+    centerB: getPositionVector[b];
+
+
+    depth: 0w;
+    normal: 0n;
+
+    n: count vtx: `LT`TR`RB`BL;
+
+    //check projections on vertices of a
+    i:0;
+    while[i<n;
+        v1: a[ vtx i ];
+        v2: a[ vtx (1+i) mod n ];
+        edge: v2 - v1;
+        axis: normalise[(-1*edge 1; edge 0)];
+        vertices: update projection: vector mmu axis from vertices;
+        m: select minP:min projection, maxP:max projection  by sym from vertices;
+        aa: m [a`sym];
+        directionRadius: axis * b`sX;
+        projectCircle: ((centerB - directionRadius) mmu axis; (centerB + directionRadius) mmu axis); 
+        cMin: min projectCircle; 
+        cMax: max projectCircle; 
+        //show cMin;
+        if [((aa`minP) >= cMax) or cMin >= aa`maxP;
+            :emptyIntersectResult[];
+        ];
+        axisDepth: min(cMax-(aa`minP);(aa`maxP)-cMin); 
+        if [axisDepth < depth;
+            depth: axisDepth;
+            normal: axis;
+        ];
+        i+:1;
+    ];
+
+    vertices: update circleCenter: count[i]#centerB from vertices;
+    vertices: update distance: .physics.distanceV'[vector;circleCenter] from vertices;
+    cp: raze exec vector from vertices where distance = min(distance);
+    axis: cp - centerB;
+    vertices: update projection: vector mmu axis from vertices;
+    m: select minP:min projection, maxP:max projection  by sym from vertices;
+    aa: m [a`sym];
+    directionRadius: axis * b`sX;
+    projectCircle: ((centerB - directionRadius) mmu axis; (centerB + directionRadius) mmu axis); 
+    cMin: min projectCircle; 
+    cMax: max projectCircle; 
+    if [((aa`minP) >= cMax) or cMin >= aa`maxP;
+        :emptyIntersectResult[];
+    ];
+    axisDepth: min(cMax-(aa`minP);(aa`maxP)-cMin); 
+    if [axisDepth < depth;
+        depth: axisDepth;
+        normal: axis;
+    ];
+
+    centerA: getPositionVector[a];
+    direction: normalise[centerB - centerA]; // vector pointing from A to B (to push B out of the way)
+    normal: $[0f>nd:direction mmu normal; -1*normal; normal];
+
+    // if already moving away from each other then return
+    relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
+    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
+
+
+    :generatePostCollisionTransformations[a;b;normal;depth]};
+
 intersectPlanes: {[pair]
     // Separating Axis Theorem (SAT)
-    result: ([] sym: `symbol$(); pXn: `float$(); pYn: `float$(); vXn: `float$(); vYn: `float$());
-
     pair: update left: pX+sX%-2, bottom: pY+sY%-2 from pair;
     pair: update right: sX+left, top: sY+bottom from pair;
     pair: update LT: enlist'[left;top],
@@ -140,7 +244,7 @@ intersectPlanes: {[pair]
         aa: m [a`sym];
         bb: m [b`sym];
         if [((aa`minP) >= bb`maxP) or (bb`minP) >= aa`maxP;
-            :result;
+            :emptyIntersectResult[];
         ];
         axisDepth: min((bb`maxP)-(aa`minP);(aa`maxP)-(bb`minP)); 
         if [axisDepth < depth;
@@ -161,7 +265,7 @@ intersectPlanes: {[pair]
         aa: m [a`sym];
         bb: m [b`sym];
         if [((aa`minP) >= bb`maxP) or (bb`minP) >= aa`maxP;
-            :result;
+            :emptyIntersectResult[];
         ];
         axisDepth: min((bb`maxP)-(aa`minP);(aa`maxP)-(bb`minP)); 
         if [axisDepth < depth;
@@ -183,74 +287,34 @@ intersectPlanes: {[pair]
     direction: normalise[centerB - centerA]; // vector pointing from A to B (to push B out of the way)
     normal: $[0f>nd:direction mmu normal; -1*normal; normal];
 
-    impulse: calculateImpulse[a;b;normal];
+    // if already moving away from each other then return
+    relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
+    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
 
-    if [0b~b`static;
-        1b~a`static;
-        moveB: normal * depth;
-        velB: impulse * b`invM;
-        result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1))];
+    :generatePostCollisionTransformations[a;b;normal;depth]};
 
-    if [0b~a`static;
-        1b~b`static;
-        moveA: -1 * normal * depth;
-        velA: -1 * impulse * a`invM;
-        result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1))];
-
-    if [0b~a`static;
-        0b~b`static;
-        moveB: normal * depth%2;
-        moveA: -1 * moveB;
-        velA: -1 * impulse * a`invM;
-        velB: impulse * b`invM;
-        result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1));
-        result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1))];
-
-    :result};
-
-intersectSpheres: {[pair]
-    // show "intersectSpheres";
-
-    result: ([] sym: `symbol$();  pXn: `float$(); pYn: `float$(); vXn: `float$(); vYn: `float$());
-
+intersectCircle: {[pair]
+    // show "intersectCircle";
     a:pair 0;
     b:pair 1;
 
-    dist: distanceSpheres[a;b];
+    distance: distanceR[a;b];
     redi: (a`sX) + b`sX;
 
-    if[dist >= redi; :result];
+    if[distance >= redi; :emptyIntersectResult[]];
 
     centerA: getPositionVector[a];
     centerB: getPositionVector[b];
 
     normal: normalise[centerB - centerA]; // vector pointing from A to B (to push B out of the way)
-    depth: redi-dist;
+    depth: redi-distance;
+
+    // if already moving away from each other then return
+    relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
+    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
     
-    impulse: calculateImpulse[a;b;normal];
+    :generatePostCollisionTransformations[a;b;normal;depth]};
 
-    if [0b~b`static;
-        1b~a`static;
-        moveB: normal * depth;
-        velB: impulse * b`invM;
-        result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1))];
-
-    if [0b~a`static;
-        1b~b`static;
-        moveA: -1 * normal * depth;
-        velA: -1 * impulse * a`invM;
-        result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1))];
-
-    if [0b~a`static;
-        0b~b`static;
-        moveB: normal * depth%2;
-        moveA: -1 * moveB;
-        velA: -1 * impulse * a`invM;
-        velB: impulse * b`invM;
-        result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1));
-        result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1))];
-
-    :result}
 
 
 
@@ -306,7 +370,7 @@ resolveCollisions: {[state; pairs]
         x: collidingSpheres i;
         k: (x`a),x`b;
         pair: select from state where sym in k;
-        state: applyTransformations[state; intersectSpheres[pair]];
+        state: applyTransformations[state; intersectCircle[pair]];
         i+:1;
     ];
 
@@ -320,15 +384,16 @@ resolveCollisions: {[state; pairs]
         i+:1;
     ];
 
-    collidingSpherePlane: select from pairs where aShape = `shpere, bShape = `plane;
-    collidingPlaneSphere: select from pairs where aShape = `plane, bShape = `shpere;
-    n: count collidingSP: collidingSpherePlane,collidingPlaneSphere;
+    // make sure object a is the plane
+    collidingPlaneSphere0: select from pairs where (aShape=`sphere), bShape=`plane;
+    collidingPlaneSphere1: select from pairs where (aShape=`plane), bShape=`sphere;
+    n: count collidingSP: collidingPlaneSphere0,collidingPlaneSphere1;
     i:0;
     while [i<n;
         x: collidingSP i;
         k: (x`a),x`b;
-        pair: select from state where sym in k;
-        state: applyTransformations[state; intersectSP[pair]];
+        pair: `shape xasc select from state where sym in k;
+        state: applyTransformations[state; intersectBoxCircle[pair]];
         i+:1;
     ];            
   :state};
@@ -372,13 +437,13 @@ updatePositionsAndVelocities: {[state; dt]
 
 updatePositionsAndVelocitiesWithInput: {[state; input; dt]
     // show "xx",input;
-    invM: first value first select invM from state where sym=`3;
+    invM: first value first select invM from state where sym=`1;
     acc: .physics.acceleration[input;invM];
     aX: (acc 0);
     aY: (acc 1);
 
     / 1. Update velocity for X, Y components 
-    state: update vX:vX+dt*aX, vY:vY+dt*aY from state where sym = `3;   
+    state: update vX:vX+dt*aX, vY:vY+dt*aY from state where sym = `1;   
     / 2. Update position for X, Y components 
-    state: update pX:pX+dt*vX, pY:pY+dt*vY from state where sym = `3;   
+    state: update pX:pX+dt*vX, pY:pY+dt*vY from state where sym = `1;   
     :state};
