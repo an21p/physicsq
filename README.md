@@ -2,6 +2,8 @@
 
 A server-driven physics engine built with **q** for kdb+ and visualized on the web using **THREE.js**. The engine simulates the motion of objects under gravity, handles collisions, and provides real-time updates via WebSockets.
 
+![](./Physics2.gif)
+
 ---
 
 ## **Features**
@@ -96,6 +98,7 @@ q main.q
 
 ### References
 - [Two-Bit Coding](https://www.youtube.com/@two-bitcoding8018)
+- [Video Game Physics Tutorial - Part I: An Introduction to Rigid Body Dynamics](https://www.toptal.com/game/video-game-physics-part-i-an-introduction-to-rigid-body-dynamics)
 - [Chris Hecker - Rigid Body Dynamics](https://www.chrishecker.com/Rigid_Body_Dynamics#Physics_References)
 - [An Introduction to Physically Based Modeling](https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf)
 - [Physics Tutorial 6: Collision Response](https://research.ncl.ac.uk/game/mastersdegree/gametechnologies/previousinformation/physics6collisionresponse/2017%20Tutorial%206%20-%20Collision%20Response.pdf)
