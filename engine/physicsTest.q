@@ -1,5 +1,5 @@
-system "l physics.q";
-system "d .physicsTest";
+\l physics.q
+\d .physicsTest
 
 trap: {[x] 
     .Q.trp[parse;x;{1@.Q.sbt 2#y}]}

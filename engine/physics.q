@@ -1,4 +1,4 @@
-system "d .physics"
+\d .physics
 
 // constants
 PI:3.141592653589793238;
@@ -209,7 +209,7 @@ intersectBoxCircle: {[pair]
 
     centerA: getPositionVector[a];
     direction: normalise[centerB - centerA]; // vector pointing from A to B (to push B out of the way)
-    normal: $[0f>nd:direction mmu normal; -1*normal; normal];
+    normal: $[0f>direction mmu normal; -1*normal; normal];
 
     // if already moving away from each other then return
     relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
@@ -290,7 +290,7 @@ intersectPlanes: {[pair]
     centerB: getPositionVector[b];
 
     direction: normalise[centerB - centerA]; // vector pointing from A to B (to push B out of the way)
-    normal: $[0f>nd:direction mmu normal; -1*normal; normal];
+    normal: $[0f>direction mmu normal; -1*normal; normal];
 
     // if already moving away from each other then return
     relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
@@ -442,8 +442,8 @@ updatePositionsAndVelocities: {[state; dt]
 
 updatePositionsAndVelocitiesWithInput: {[state; input; dt]
     // show "xx",input;
-    invM: first exec invM from state where sym=`1;
-    acc: .physics.acceleration[input;invM];
+    invMass first exec invM from state where sym=`1;
+    acc: .physics.acceleration[input;invMass];
     aXin: (acc 0);
     aYin: (acc 1);
 

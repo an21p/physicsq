@@ -1,5 +1,5 @@
-system "l physics.q";
-system "p 5001";
+\l physics.q
+\p 5001
 
 `objCount set 20;
 `inputScale set 200f;
@@ -8,7 +8,7 @@ system "p 5001";
 .z.ws:{
 	message:.j.k x;
 	action: `$message`action;
-	params: message`params;	
+	// params: message`params;	
 	// show raze "running " ,string(action);
 
 	if[action~`loadPage; 

@@ -1,6 +1,6 @@
-system "l qunit.q"
-system "l physicsTest.q"
-system "c 100 115"
+\l qunit.q
+\l physicsTest.q
+\c 100 115
 
 x: .qunit.runTests `.physicsTest;
 
