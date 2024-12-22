@@ -12,7 +12,7 @@
 
 / @TODO mocking projections are broken, add test and fix.
 
-system "d .qunit";
+\d .qunit
 
 EMPTYAR:`actual`expected`msg!```;
 FAIL: "assertionFailed"; / exception thrown on assertion fail

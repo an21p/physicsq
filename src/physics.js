@@ -20,8 +20,6 @@ function connect() {
             /*depending on the messages func value, pass the result
             to the appropriate handler function*/ 
             switch (d.func) {
-                // case 'getSyms'   : setSyms(d.result); break;
-                // case 'getQuotes' : setQuotes(d.result); break;
                 case 'getState':
                     animate(d.result);
                     const delta = clock.getDelta();
@@ -156,11 +154,7 @@ function init() {
         console.log("load");
         connect();
     });
-
-    renderer.setAnimationLoop(() => {
-        tick();
-    })
-
+    
     document.onkeydown = (e) => {
         if(controller[e.code]){    controller[e.code].pressed = true  }
     };

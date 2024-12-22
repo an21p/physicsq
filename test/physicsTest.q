@@ -1,4 +1,4 @@
-\l physics.q
+\l ../engine/physics.q
 \d .physicsTest
 
 trap: {[x] 

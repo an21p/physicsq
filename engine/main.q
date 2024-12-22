@@ -5,7 +5,9 @@
 `inputScale set 200f;
 `.physics.restitution set 0.9f;
 
-.z.ws:{
+.z.ws:{.Q.trp[runWS;x;{2"error: ",x,"\nbacktrace:\n",.Q.sbt [y];value `state}]};
+
+runWS:{
 	message:.j.k x;
 	action: `$message`action;
 	// params: message`params;	
@@ -25,7 +27,7 @@
 		
 		nextInput: (value `inputScale)*.physics.normalise[value `input];
 		dict: (`state`input`dt)!(value `state;nextInput;delta);
-		`state set nextState: .Q.trp[.physics.updateState;dict;{2"error: ",x,"\nbacktrace:\n",.Q.sbt [y];value `state}];
+		`state set .physics.updateState[dict];
 		
 		if [not all 0 = value `input; `input set (0f;0f)];
 		(neg .z.w) .j.j getState[];
@@ -55,7 +57,6 @@
  	];
 
 	};
-.z.wc: {delete from `subs where handle=x};
 
 initState:{ 
 	state: .physics.initState[]; 

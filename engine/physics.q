@@ -32,7 +32,7 @@ unpivot:{[tab;baseCols;pivotCols;kCol;vCol]
 // Normalise vector to magnitute 1
 // @param v vector
 // @return normalised vector
-normalise: {[v] :0^v%sqrt sum v*v};
+normalise: {[v] :0f^v%sqrt sum v*v};
 
 // Acceleration from foce and mass
 // F=ma => a=F/m
@@ -47,6 +47,8 @@ acceleration: {[force; invMass] :force*invMass};
 // @param theta => angle in radian
 // @return transformed vector
 transform: {[v;theta] R: 2 2#(cos theta; -1*sin theta; sin theta; cos theta); :R mmu v};
+
+relativeVelocity: {[a;b] :1f*getVelocityVector[b] - getVelocityVector[a]};
 
 // Distance between spheres
 distanceR: {[a;b] :sqrt sum v*v: getPositionVector[a]-getPositionVector[b]}
@@ -66,22 +68,22 @@ generatePostCollisionTransformations: {[a;b;normal;depth]
     result: emptyIntersectResult[];
     if [0b~b`static;
         1b~a`static;
-        moveB: normal * depth;
-        velB: impulse * b`invM;
+        moveB: 1f * normal * depth;
+        velB: 1f * impulse * b`invM;
         result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1))];
 
     if [0b~a`static;
         1b~b`static;
-        moveA: -1 * normal * depth;
-        velA: -1 * impulse * a`invM;
+        moveA: -1f * normal * depth;
+        velA: -1f * impulse * a`invM;
         result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1))];
 
     if [0b~a`static;
         0b~b`static;
-        moveB: normal * depth%2;
-        moveA: -1 * moveB;
-        velA: -1 * impulse * a`invM;
-        velB: impulse * b`invM;
+        moveB: 1f * normal * depth%2;
+        moveA: -1f * moveB;
+        velA: -1f * impulse * a`invM;
+        velB: 1f * impulse * b`invM;
         result: result upsert ((a`sym);(moveA 0);(moveA 1); (velA 0);(velA 1));
         result: result upsert ((b`sym);(moveB 0);(moveB 1); (velB 0);(velB 1))];
 
@@ -98,32 +100,39 @@ addBox: {[state]
     state: state upsert (`planeB;`plane;0f;   0f;-600f;0f;0f;0f;0f;0f;1500f;500f;1b);
     state: state upsert (`planeL;`plane;0f;-700f;   0f;0f;0f;0f;0f;0f;100f;1300f;1b);
     :state};
-addRandomElements: {[state; x]
-    r: defaultCircleRadius;
-    shperes: ([] sym: (`$ string each til x);   // unique id
-                    shape: x#`sphere;               
-                    invM: 1% x#defaultCircleMass;              // inverse mass
-                    pX: -400+x?800;
-                    pY: -300+x?800;
-                    vX: x#0; vY: x#0;
-                    aX: x#0; aY: x#0;
-                    theta: x#0;
-                    sX: x#r; sY: x#r;
-                    static: 0b);
-    r: defaultBoxWidth;
-    rectangles: ([] sym: (`$ string each x+til x);   // unique id
-                    shape: x#`plane;               
-                    invM: 1% x#defaultBoxMass;              // inverse mass
-                    pX: -400+x?800;
-                    pY: -300+x?800;
-                    vX: x#0; vY: x#0;
-                    aX: x#0; aY: x#0; 
-                    theta: x#0;
-                    sX: x#r; sY: x#r;
-                    static: 0b);
-    state: state uj rectangles uj shperes;
+addRandomElements: {[state; n]
+    cirlces: createCircles[n];
+    boxes: createBoxes[n];
+    state: state uj cirlces uj boxes;
     :state};
 
+createCircles: {
+    r: defaultCircleRadius;
+    circles: ([] sym: (`$ string each til x);   // unique id
+                    shape: x#`sphere;               
+                    invM: 1% x#defaultCircleMass;              // inverse mass
+                    pX: -400+x?800f;
+                    pY: -300+x?800f;
+                    vX: x#0f; vY: x#0f;
+                    aX: x#0f; aY: x#0f;
+                    theta: x#0f;
+                    sX: x#r; sY: x#r;
+                    static: 0b);
+    :circles}
+
+createBoxes: {
+    r: defaultBoxWidth;
+    boxes: ([] sym: (`$ string each x+til x);   // unique id
+                    shape: x#`plane;               
+                    invM: 1% x#defaultBoxMass;              // inverse mass
+                    pX: -400+x?800f;
+                    pY: -300+x?800f;
+                    vX: x#0f; vY: x#0f;
+                    aX: x#0f; aY: x#0f; 
+                    theta: x#0f;
+                    sX: x#r; sY: x#r;
+                    static: 0b);
+    :boxes}
 
 
 // Collision Resolution Functions
@@ -134,8 +143,7 @@ checkCollisions: {[state]
 
 calculateImpulse: {[a;b;normal] 
     resitution: value `.physics.restitution; 
-    relativeVelocity: getVelocityVector[b]-getVelocityVector[a];
-    j: -1*(1f+resitution) * (relativeVelocity mmu normal);
+    j: -1*(1f+resitution) * (relativeVelocity[a;b] mmu normal);
     :normal*j % (a`invM)+b`invM};
 
 
@@ -212,9 +220,7 @@ intersectBoxCircle: {[pair]
     normal: $[0f>direction mmu normal; -1*normal; normal];
 
     // if already moving away from each other then return
-    relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
-
+    if [0f < relativeVelocity[a;b] mmu normal; :emptyIntersectResult[]];
 
     :generatePostCollisionTransformations[a;b;normal;depth]};
 
@@ -293,8 +299,7 @@ intersectPlanes: {[pair]
     normal: $[0f>direction mmu normal; -1*normal; normal];
 
     // if already moving away from each other then return
-    relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
+    if [0f < relativeVelocity[a;b] mmu normal; :emptyIntersectResult[]];
 
     :generatePostCollisionTransformations[a;b;normal;depth]};
 
@@ -315,8 +320,7 @@ intersectCircle: {[pair]
     depth: redi-distance;
 
     // if already moving away from each other then return
-    relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
+    if [0f < relativeVelocity[a;b] mmu normal; :emptyIntersectResult[]];
     
     :generatePostCollisionTransformations[a;b;normal;depth]};
 
