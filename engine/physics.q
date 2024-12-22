@@ -3,7 +3,7 @@ system "d .physics"
 // constants
 PI:3.141592653589793238;
 gravity: -1; //-9.81f;
-restitution: 0.5f;
+restitution: 0.65f;
 defaultCircleRadius: 20f;
 defaultCircleMass: 50f;
 defaultBoxWidth: 40f;

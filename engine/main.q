@@ -1,6 +1,9 @@
 system "l physics.q";
 system "p 5001";
 
+`objCount set 150;
+`inputScale set 20f;
+
 .z.ws:{
 	message:.j.k x;
 	action: `$message`action;
@@ -55,7 +58,7 @@ subs:2!flip `handle`func`params!"is*"$\:();
 initState:{ 
 	state: .physics.initState[]; 
 	state: .physics.addBox[state]; 
-	: .physics.addRandomElements[state; 10]};
+	: .physics.addRandomElements[state; value `objCount]};
 
 getState:{`func`result!(`getState; get `state)};
 
@@ -68,15 +71,15 @@ pub:{
 	(neg row[`handle]) .j.j (value row[`func])[row[`params]]
  };
 
-/* trigger refresh every 100ms */
+// runs every 1 millisecond
 .z.ts:{
 	if [not `state~key `state; `state set initState[]];
 	if [not `time~key `time; `time set .z.t];
-	nextInput: 100f*.physics.normalise[value `input];
+	nextInput: (value `inputScale)*.physics.normalise[value `input];
 	now: .z.t;
-	dt: (`float$now-value `time)%100;
+	dt: (`float$now-value `time)%1000; // turn milliseconds into seconds (for the simulations)
 	`time set now;
-	//show  "dt:",string dt;
+	show  "dt:",string dt;
 	dict: (`state`input`dt)!(value `state;nextInput;dt);
 	nextState: .Q.trp[.physics.updateState;dict;{2"error: ",x,"\nbacktrace:\n",.Q.sbt [y];value `state}];
 	`state set nextState;
