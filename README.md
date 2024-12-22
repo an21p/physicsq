@@ -13,3 +13,6 @@
 - friction
 - angular momentum
 - rename plane to box and sphere to circle
+
+
+https://discoverthreejs.com/book/first-steps/animation-loop/

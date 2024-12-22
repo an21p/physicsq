@@ -2,7 +2,7 @@ system "d .physics"
 
 // constants
 PI:3.141592653589793238;
-gravity: -1; //-9.81f;
+gravity: -1f; //-9.81f;
 restitution: 0.65f;
 defaultCircleRadius: 20f;
 defaultCircleMass: 50f;
@@ -213,7 +213,7 @@ intersectBoxCircle: {[pair]
 
     // if already moving away from each other then return
     relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f <= relativeVelocity mmu normal; :emptyIntersectResult[]];
+    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
 
 
     :generatePostCollisionTransformations[a;b;normal;depth]};
@@ -294,7 +294,7 @@ intersectPlanes: {[pair]
 
     // if already moving away from each other then return
     relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f <= relativeVelocity mmu normal; :emptyIntersectResult[]];
+    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
 
     :generatePostCollisionTransformations[a;b;normal;depth]};
 
@@ -316,7 +316,7 @@ intersectCircle: {[pair]
 
     // if already moving away from each other then return
     relativeVelocity: getVelocityVector[b] - getVelocityVector[a];
-    if [0f <= relativeVelocity mmu normal; :emptyIntersectResult[]];
+    if [0f < relativeVelocity mmu normal; :emptyIntersectResult[]];
     
     :generatePostCollisionTransformations[a;b;normal;depth]};
 

@@ -4,6 +4,9 @@ system "d .physicsTest";
 trap: {[x] 
     .Q.trp[parse;x;{1@.Q.sbt 2#y}]}
 
+.physics.restitution: 0.5f;
+.physics.gravity: 0f;
+
 initSimpleMocked: {
     r:10f;
     mockState: .physics.initWithPlane[];
@@ -17,8 +20,8 @@ initSimpleMocked: {
 initCollidingBoxes: {
     r:10f;
     mockState: .physics.initState[];
-    mockState: mockState upsert (`4;`plane;1f; 205f;205f;0f;0f;0f;0f;0f;r;r;0b);
-    mockState: mockState upsert (`5;`plane;1f; 200f;200f;0f;0f;0f;0f;0f;r;r;0b);
+    mockState: mockState upsert (`4;`plane;1f; 205f;205f;0f;0f;0f;-1*.physics.gravity;0f;r;r;0b);
+    mockState: mockState upsert (`5;`plane;1f; 200f;200f;0f;0f;0f;-1*.physics.gravity;0f;r;r;0b);
     // apply force equal to -1*gravity to keep them at the same point
     mockState: update aY: -1* .physics.gravity from mockState;
     :mockState}
@@ -52,7 +55,7 @@ testUpdateNoForce:{
     :`pass}
 
 testUpdateForce:{
-    show mockState: .physicsTest.initSimpleMocked[];
+    mockState: .physicsTest.initSimpleMocked[];
 
     // apply force of 1 on x-axis to all 
     // velocity should increment by 1
@@ -123,12 +126,22 @@ testCircleAABB: {[]
     .qunit.assertEquals[s1; s1expeted; "correct placement on x-axis"];
     :`pass}
 
+testCollisionSpheres: {[]
+    mockState: .physicsTest.initSimpleMocked[];
+    mockState: update pX: -9f, vX: 1f, aX: 0f from mockState where sym=`1;
+    // mockState: update pX: 19f, vX: 1f, fX: 0f from mockState where sym=`3;
+    s1: .physics.checkCollisions[mockState];
+    s1r: select sym, pX, pY from s1 where sym in `1`2;
+    s1expected: ([] sym:`1`2; pX:-10,11; pY:10.5,10.5);
+    .qunit.assertEquals[s1r; s1expected; "correct placement post collision"];
+    :`pass}
+
 testCollisionsPlanes: {[]
-    mockState: .physicsTest.initCollidingBoxes[];
-    pairs: .physics.sortAndSweepCollision[mockState];
+    show mockState: .physicsTest.initCollidingBoxes[];
+    show pairs: .physics.sortAndSweepCollision[mockState];
     s1: .physics.resolveCollisions[mockState;pairs];
-    s1r: select sym, pX, pY from s1;
-    s1expected: ([] sym:`4`5; pX:205,200; pY:210,195);
+    show s1r: select sym, pX, pY from s1;
+    show s1expected: ([] sym:`4`5; pX:205,200; pY:210,195);
     .qunit.assertEquals[s1r; s1expected; "correct placement post collision"];
     :`pass}
 
@@ -161,24 +174,13 @@ testCollisionDetectionEdge: {[]
 
 testCollisionDetectionSortAndSweep: {[]
     mockState: .physicsTest.initSimpleMocked[];
-    mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
+    mockState: update pX: -9f, vX: 1f, aX: 0f from mockState where sym=`1;
     pairs: .physics.sortAndSweepCollision[mockState];
     collidingSpheres: select from pairs where aShape = `sphere, bShape = `sphere;
     .qunit.assertEquals[count collidingSpheres; 1; "should contain 1 collision"];
     .qunit.assertEquals[collidingSpheres`a; `1];
     .qunit.assertEquals[collidingSpheres`b; `2];
     :`pass}
-
-testCollisionSpheres: {[]
-    mockState: .physicsTest.initSimpleMocked[];
-    mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
-    // mockState: update pX: 19f, vX: 1f, fX: 0f from mockState where sym=`3;
-    s1: .physics.checkCollisions[mockState];
-    s1r: select sym, pX, pY from s1 where sym in `1`2;
-    s1expected: ([] sym:`1`2; pX:-10,11; pY:10.5,10.5);
-    .qunit.assertEquals[s1r; s1expected; "correct placement post collision"];
-    :`pass}
-
 
 testNormalise: {[]
     nv: .physics.normalise[(9;0;0f)];
@@ -187,7 +189,7 @@ testNormalise: {[]
 
 testDistnaceSpheres: {[]
     mockState: .physicsTest.initSimpleMocked[];
-    mockState: update pX: -9f, vX: 1f, fX: 0f from mockState where sym=`1;
+    mockState: update pX: -9f, vX: 1f, aX: 0f from mockState where sym=`1;
 
     pair: select from mockState where sym in `1`2;
     a:pair 0;

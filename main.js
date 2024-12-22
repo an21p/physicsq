@@ -1,6 +1,9 @@
 import * as THREE from 'three';
+import { Clock } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const clock = new Clock();
 
 function connect() {
     if ("WebSocket" in window) {
@@ -20,7 +23,9 @@ function connect() {
                 // case 'getSyms'   : setSyms(d.result); break;
                 // case 'getQuotes' : setQuotes(d.result); break;
                 case 'getState':
-                    update(d.result);
+                    animate(d.result);
+                    const delta = clock.getDelta();
+                    ws.send(`{"action": "update", "delta": ${delta}}`);
             }
         };
         ws.onclose = function (e) {
@@ -105,7 +110,7 @@ function addNewObjects(state) {
     })
 }
 
-function update(state) {
+function animate(state) {
     Object.keys(controller).forEach(key=> { controller[key].pressed && controller[key].func() })
     
     state.forEach((element) => {
@@ -121,11 +126,10 @@ function update(state) {
     });
     addNewObjects(state);
 
-    // controls.update();
     renderer.render(scene, camera);
     labelRenderer.render( scene, camera );
+    // controls.update();
 }
-
 
 function init() {
     window.addEventListener('resize', () => {
@@ -153,6 +157,10 @@ function init() {
         connect();
     });
 
+    renderer.setAnimationLoop(() => {
+        tick();
+    })
+
     document.onkeydown = (e) => {
         if(controller[e.code]){    controller[e.code].pressed = true  }
     };
@@ -174,6 +182,8 @@ function init() {
     );
     camera.position.z = 10; // Position the camera away from the square
     // camera.position.z = 500; // Position the camera away from the square
+    camera.zoom = 0.7;
+    camera.updateProjectionMatrix();
 
     // lights
     let pointLight1 = new THREE.PointLight(0xffffff, 5, 0, 0); pointLight1.position.set(0, 0, 300);

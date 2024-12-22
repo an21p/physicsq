@@ -1,8 +1,9 @@
 system "l physics.q";
 system "p 5001";
 
-`objCount set 150;
-`inputScale set 20f;
+`objCount set 20;
+`inputScale set 200f;
+`.physics.restitution set 0.9f;
 
 .z.ws:{
 	message:.j.k x;
@@ -12,19 +13,23 @@ system "p 5001";
 
 	if[action~`loadPage; 
 		`state set initState[];
-		`time set .z.t;
 		`input set (0f;0f);
-		`.physics.restitution set 0.9f;
-		sub[`getState;enlist `];
-		// system "t 30";
-		system "t 1";
+		// sub[`getState;enlist `];
+		(neg .z.w) .j.j getState[];
  	];
 
-	// if[action~`move; 
-	// 	// show message`params;
-	// 	`input set message`params;
-	// 	// show input;
- 	// ];
+	if[action~`update;
+		// direction: `$message`params;
+		delta: `float$message`delta;
+		show  "dt:",string delta;
+		
+		nextInput: (value `inputScale)*.physics.normalise[value `input];
+		dict: (`state`input`dt)!(value `state;nextInput;delta);
+		`state set nextState: .Q.trp[.physics.updateState;dict;{2"error: ",x,"\nbacktrace:\n",.Q.sbt [y];value `state}];
+		
+		if [not all 0 = value `input; `input set (0f;0f)];
+		(neg .z.w) .j.j getState[];
+	]; 
 
 	if[action~`move; 
 		direction: `$message`params;
@@ -52,44 +57,9 @@ system "p 5001";
 	};
 .z.wc: {delete from `subs where handle=x};
 
-/* subs table to keep track of current subscriptions */
-subs:2!flip `handle`func`params!"is*"$\:();
-
 initState:{ 
 	state: .physics.initState[]; 
 	state: .physics.addBox[state]; 
 	: .physics.addRandomElements[state; value `objCount]};
 
 getState:{`func`result!(`getState; get `state)};
-
-/*subscribe to something */
-sub:{`subs upsert(.z.w;x;enlist y)};
-
-/*publish data according to subs table */
-pub:{ 
-	row:(0!subs)[x]; 
-	(neg row[`handle]) .j.j (value row[`func])[row[`params]]
- };
-
-// runs every 1 millisecond
-.z.ts:{
-	if [not `state~key `state; `state set initState[]];
-	if [not `time~key `time; `time set .z.t];
-	nextInput: (value `inputScale)*.physics.normalise[value `input];
-	now: .z.t;
-	dt: (`float$now-value `time)%1000; // turn milliseconds into seconds (for the simulations)
-	`time set now;
-	show  "dt:",string dt;
-	dict: (`state`input`dt)!(value `state;nextInput;dt);
-	nextState: .Q.trp[.physics.updateState;dict;{2"error: ",x,"\nbacktrace:\n",.Q.sbt [y];value `state}];
-	`state set nextState;
-	if [not all 0 = value `input; `input set (0f;0f);];
-	pub each til count subs;
-	};
-
-debug: {
-	`input set (0f;0f);
-	st: initState[];
-	show st;
-	st: .physics.updateState[st;input];
-	st: .physics.updateState[stop;input]}
