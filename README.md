@@ -98,5 +98,5 @@ q main.q
 - [Two-Bit Coding](https://www.youtube.com/@two-bitcoding8018)
 - [Chris Hecker - Rigid Body Dynamics](https://www.chrishecker.com/Rigid_Body_Dynamics#Physics_References)
 - [An Introduction to Physically Based Modeling](https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf)
-- [Physics Tutorial 6: Collision Response][https://research.ncl.ac.uk/game/mastersdegree/gametechnologies/previousinformation/physics6collisionresponse/2017%20Tutorial%206%20-%20Collision%20Response.pdf]
+- [Physics Tutorial 6: Collision Response](https://research.ncl.ac.uk/game/mastersdegree/gametechnologies/previousinformation/physics6collisionresponse/2017%20Tutorial%206%20-%20Collision%20Response.pdf)
 - [Animation Loop](https://discoverthreejs.com/book/first-steps/animation-loop/)
