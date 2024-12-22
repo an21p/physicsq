@@ -1,17 +1,17 @@
 {
   "name": "physicsq",
   "version": "1.0.0",
-  "description": "A physics engine in kdb/q",
+  "description": "A physics engine in kdb/q visualised using Three.js",
   "main": "main.js",
   "scripts": {
-    "transpile": "npx swc main.ts > main.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon && npx vite"
+    "engine": "cd engine; q main.q",
+    "test": "cd engine; q test.q",
+    "web": "npx vite",
+    "all": "npm run engine & npm run web"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "jkdb": "^1.1.6",
     "vite": "^6.0.3"
   },
   "dependencies": {
