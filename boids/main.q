@@ -2,7 +2,7 @@
 \p 5002
 \c 100 115
 
-`objCount set 25;
+`objCount set 250;
 `.physics.gravity set 0f;
 `.physics.restitution set 0.5f;
 
