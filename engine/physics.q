@@ -29,10 +29,15 @@ unpivot:{[tab;baseCols;pivotCols;kCol;vCol]
  baseCols xasc raze {[b;n] b,'n}[base] each newCols
  }
 
+// Magnitute of a vector
+// @param x vector
+// @return magnitute scalar
+magnitute: {sqrt sum x*x}
+
 // Normalise vector to magnitute 1
-// @param v vector
+// @param x vector
 // @return normalised vector
-normalise: {[v] :0f^v%sqrt sum v*v};
+normalise: {:0f^x % magnitute[x]};
 
 // Acceleration from foce and mass
 // F=ma => a=F/m

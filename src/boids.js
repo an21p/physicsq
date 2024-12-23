@@ -22,7 +22,9 @@ function connect() {
                 case 'getState':
                     animate(d.result);
                     const delta = clock.getDelta();
-                    ws.send(`{"action": "update", "delta": ${delta}}`);
+                    setTimeout(()=> {
+                        ws.send(`{"action": "update", "delta": ${delta}}`);
+                    },25);
             }
         };
         ws.onclose = function (e) {
@@ -113,7 +115,7 @@ function init() {
 
     // Create an orthographic camera
     const aspect = window.innerWidth / window.innerHeight;
-    const frustumSize = 1000;
+    const frustumSize = 5000;
     camera = new THREE.OrthographicCamera(
         frustumSize * aspect / - 2, 
         frustumSize * aspect / 2,
@@ -124,7 +126,7 @@ function init() {
     );
     camera.position.z = 10; // Position the camera away from the square
     // camera.position.z = 500; // Position the camera away from the square
-    camera.zoom = 0.7;
+    camera.zoom = 1;
     camera.updateProjectionMatrix();
 
     // lights
