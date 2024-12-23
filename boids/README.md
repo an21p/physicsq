@@ -5,6 +5,9 @@ Making use of the physicsq engine I made a simple extension that renders boids.
 
 ![](../public/img/BoidsQ.gif)
 
+## Mouse following
+![](../public/img/BoidsQ2.gif)
+
 
 ## Next steps
 - add more rules
