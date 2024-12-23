@@ -1,18 +1,20 @@
 import * as THREE from 'three';
 import { Clock } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 const clock = new Clock();
 
-function connect() {
+function connect(initSettings) {    
     if ("WebSocket" in window) {
         ws = new WebSocket("ws://localhost:5002");
-        ws.onopen = function (e) {
+        ws.onopen = (e) => {
             /* on successful connection, we want to create an
              initial subscription to load all the data into the page*/ 
-             ws.send('{"action": "loadPage"}');
+             ws.send('{"action": "loadPage"}');             
+             initSettings.forEach((s)=> ws.send(s));
         };
-        ws.onmessage = function (e) {
+        ws.onmessage = (e) => {
             /*parse message from JSON String into Object*/ 
             // console.log(e.data);            
             var d = JSON.parse(e.data);
@@ -27,10 +29,10 @@ function connect() {
                     },25);
             }
         };
-        ws.onclose = function (e) {
+        ws.onclose = (e) => {
             console.log("disconnected");
         };
-        ws.onerror = function (e) {
+        ws.onerror = (e) => {
             console.log(e.data);
         };
     } else alert("WebSockets not supported on your browser.");
@@ -58,7 +60,7 @@ function addNewObjects(state) {
         if (element.sym in shapes) return;
     
         let object; 
-        let color = 0xa1a1a1;
+        let color = 0xa1a1de;
         if (element.sym === "1") color = 0xff0000;
         
         switch (element.shape) {
@@ -107,11 +109,6 @@ function init() {
     renderer = new THREE.WebGLRenderer(); renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // ws
-    window.addEventListener("DOMContentLoaded", function () {
-        console.log("load");
-        connect();
-    });
 
     // Create an orthographic camera
     const aspect = window.innerWidth / window.innerHeight;
@@ -126,7 +123,7 @@ function init() {
     );
     camera.position.z = 10; // Position the camera away from the square
     // camera.position.z = 500; // Position the camera away from the square
-    camera.zoom = 1;
+    camera.zoom = .5;
     camera.updateProjectionMatrix();
 
     // lights
@@ -153,6 +150,51 @@ function init() {
     controls.maxDistance = 2000;
 
     controls.maxPolarAngle = Math.PI / 2;
+
+    // panel
+    const panel = new GUI( { width: 310 } );
+    const rule0 = panel.addFolder( 'Rule 0: Tendancy to zero' );
+    const rule1 = panel.addFolder( 'Rule 1: Boids try to fly towards the centre of mass' );
+    const rule2 = panel.addFolder( 'Rule 2: Boids try to keep a small distance away' );
+    const rule3 = panel.addFolder( 'Rule 3: Boids try to match velocity with near boids' );
+    const maxSpeed = panel.addFolder( 'Rule *: Limit max speed' );
+    const settings = {
+        ruleZeroScale: 0.025,
+        ruleOneScale: 0.02,
+        ruleTwoScale: 0.5,
+        ruleTwoDisance: 55.0,
+        ruleThreeScale: 0.25,
+        maxSpeed: 180.0,
+    };
+
+    rule0.add(settings, 'ruleZeroScale', 0, 0.1, 0.001).name('Scale').onChange(value => {
+        ws.send(`{"action": "settings", "key": "ruleZeroScale", "value":${value}}`);
+    });    
+    rule1.add(settings, 'ruleOneScale', 0, 0.03, 0.001).name('Scale').onChange(value => {
+        ws.send(`{"action": "settings", "key": "ruleOneScale", "value":${value}}`);
+    });
+    rule2.add(settings, 'ruleTwoScale', 0, 1, 0.05).name('Scale').onChange(value => {
+        ws.send(`{"action": "settings", "key": "ruleTwoScale", "value":${value}}`);
+    });
+    rule2.add(settings, 'ruleTwoDisance', 0, 200, 1).name('Distance').onChange(value => {
+        ws.send(`{"action": "settings", "key": "ruleTwoDisance", "value":${value}}`);
+    });
+    rule3.add(settings, 'ruleThreeScale', 0, 1, 0.01).name('Scale').onChange(value => {
+        ws.send(`{"action": "settings", "key": "ruleThreeScale", "value":${value}}`);
+    });
+    maxSpeed.add(settings, 'maxSpeed', 0, 350, 1).name('Max Speed').onChange(value => {
+        ws.send(`{"action": "settings", "key": "maxSpeed", "value":${value}}`);
+    });
+
+    // ws
+    window.addEventListener("DOMContentLoaded", () => {
+        console.log("load");
+        let initSettings = Object.keys(settings).map((s)=> {
+            return `{"action": "settings", "key":"${s}", "value":${settings[s]}}`;      
+          });
+        connect(initSettings);
+    });
+
 }
 
 let ws, renderer, controls, camera, scene

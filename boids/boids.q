@@ -1,15 +1,15 @@
 \l ../engine/physics.q
 \d .boids
 
-scaleR0: 0.022;
-scaleR1: 0.020;
+scaleR0: 0.025;
+scaleR1: 0.015;
 scaleR2: 0.2;
 distance: 20f;
 scaleR3: 0.125;
 vMax: 95f;
 
 initState: {[n]
-    `.physics.defaultCircleRadius set  30f;
+    `.physics.defaultCircleRadius set  50f;
     state: .physics.createCircles[n];
     // state: update pX:0f, pY:0f, static:1b from state where sym=`1;
     state: .physics.checkCollisions[state];
