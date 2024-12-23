@@ -25,6 +25,7 @@ runWS: {
 		k: `$message`key;
 		v: `float$message`value;
 
+		if[`ruleMScale ~ k; `.boids.scaleRM set v];
 		if[`ruleZeroScale ~ k; `.boids.scaleR0 set v];
 		if[`ruleOneScale ~ k; `.boids.scaleR1 set v];
 		if[`ruleTwoScale ~ k; `.boids.scaleR2 set v];
@@ -44,6 +45,7 @@ runWS: {
 		dict: (`state`dt)!(value `state;delta);
 		`state set .boids.updateState[dict];
 		(neg .z.w) .j.j getState[];
-	]};
+	];
+	};
 
 getState:{`func`result!(`getState; get `state)};

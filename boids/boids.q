@@ -1,12 +1,13 @@
 \l ../engine/physics.q
 \d .boids
 
+scaleRM: 0.025;
 scaleR0: 0.025;
-scaleR1: 0.015;
-scaleR2: 0.2;
-distance: 20f;
+scaleR1: 0.018;
+scaleR2: 0.1;
+distance: 100f;
 scaleR3: 0.125;
-vMax: 95f;
+vMax: 5f;
 targetX: 0f;
 targetY: 0f;
 
@@ -17,12 +18,20 @@ initState: {[n]
     state: .physics.checkCollisions[state];
     :state};
 
+//// Rule M: Tendancy to mouse
+ruleM: {[state]
+    scale: value `.boids.scaleRM;
+    :`sym xkey select sym, 
+                vX:scale*( (value `.boids.targetX)-pX ), 
+                vY:scale*( (value `.boids.targetY)-pY ) 
+           from state where static=0b};
+
 //// Rule 0: Tendancy to zero
 rule0: {[state]
     scale: value `.boids.scaleR0;
     :`sym xkey select sym, 
-                vX:scale*( (value `.boids.targetX)-pX ), 
-                vY:scale*( (value `.boids.targetX)-pY ) 
+                vX:scale* ( 0-pX ), 
+                vY:scale* ( 0-pY ) 
            from state where static=0b};
 
 
@@ -63,11 +72,13 @@ limitSpeed: {[state]
     :state};
 
 applyRules: {[state]
+    rM: .boids.ruleM[state];
     r0: .boids.rule0[state];
     r1: .boids.rule1[state];
     r2: .boids.rule2[state];
     r3: .boids.rule3[state];
 
+    state: state pj rM;
     state: state pj r0;
     state: state pj r1;
     state: state pj r2;

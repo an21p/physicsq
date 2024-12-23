@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Clock } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { debounce } from 'lodash-es';
 
 
 function connect(initSettings) {    
@@ -23,9 +24,9 @@ function connect(initSettings) {
                 case 'getState':
                     animate(d.result);
                     const delta = clock.getDelta();
-                    setTimeout(()=> {
+                    // setTimeout(()=> {
                         ws.send(`{"action": "update", "delta": ${delta}}`);
-                    },25);
+                    // },25);
             }
         };
         ws.onclose = (e) => {
@@ -54,16 +55,28 @@ function setPositionAndRotation(o, e) {
     return o;
 }
 
-function onDocumentMouseMove( event ) {
+function moveToMouse(event) {
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     planeNormal.copy(camera.position).normalize();
     plane.setFromNormalAndCoplanarPoint(planeNormal, scene.position);
     raycaster.setFromCamera(mouse, camera);
     raycaster.ray.intersectPlane(plane, intersectionPoint);
-    console.log(intersectionPoint);
+    // console.log(intersectionPoint);
+    ws.send(`{"action": "mouse", "x": ${intersectionPoint.x}, "y": ${intersectionPoint.y}}`);
     // console.table(intersectionPoint);
-    
+}
+
+function onDocumentMouseDown( event ) {
+    moveToMouse(event)
+}
+
+function onDocumentMouseMove( event ) {
+    moveToMouse(event)
+}
+
+function onDocumentRightMouseDown( event ) {
+    followMouse = !followMouse;
 }
 
 function addNewObjects(state) {
@@ -165,20 +178,25 @@ function init() {
 
     // panel
     const panel = new GUI( { width: 310 } );
+    const ruleM = panel.addFolder( 'Rule M: Follow mouse (right click to disable)' );
     const rule0 = panel.addFolder( 'Rule 0: Tendancy to zero' );
     const rule1 = panel.addFolder( 'Rule 1: Boids try to fly towards the centre of mass' );
     const rule2 = panel.addFolder( 'Rule 2: Boids try to keep a small distance away' );
     const rule3 = panel.addFolder( 'Rule 3: Boids try to match velocity with near boids' );
     const maxSpeed = panel.addFolder( 'Rule *: Limit max speed' );
     const settings = {
-        ruleZeroScale: 0.025,
-        ruleOneScale: 0.02,
-        ruleTwoScale: 0.5,
-        ruleTwoDisance: 55.0,
+        ruleMScale: 0.005,
+        ruleZeroScale: 0.015,
+        ruleOneScale: 0.018,
+        ruleTwoScale: 0.6,
+        ruleTwoDisance: 95.0,
         ruleThreeScale: 0.25,
-        maxSpeed: 180.0,
+        maxSpeed: 200.0,
     };
 
+    ruleM.add(settings, 'ruleMScale', 0, 0.01, 0.001).name('Scale').onChange(value => {
+        ws.send(`{"action": "settings", "key": "ruleMScale", "value":${value}}`);
+    });    
     rule0.add(settings, 'ruleZeroScale', 0, 0.1, 0.001).name('Scale').onChange(value => {
         ws.send(`{"action": "settings", "key": "ruleZeroScale", "value":${value}}`);
     });    
@@ -207,13 +225,20 @@ function init() {
         connect(initSettings);
     });
 
-    // mouse 
-    document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    mouse 
+    const delay = 10;
+    const debounced = debounce((e) => {onDocumentMouseMove(e)}, delay);
+    
+    document.addEventListener("mousemove", (e) => {debounced(e) }, false);
+    document.addEventListener("mousedown", (e) => {onDocumentMouseDown(e) }, false);
+    document.addEventListener("contextmenu", (e) => {onDocumentRightMouseDown(e) }, false);
+
 
 }
 const clock = new Clock();
 
 let ws, renderer, controls, camera, scene
+let followMouse = true;
 let shapes = {};
 
 // mouse click
