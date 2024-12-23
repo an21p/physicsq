@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { Clock } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { debounce } from 'lodash-es';
 
 
 function connect(initSettings) {    
@@ -225,15 +224,13 @@ function init() {
         connect(initSettings);
     });
 
-    mouse 
+    // mouse 
     const delay = 10;
     const debounced = debounce((e) => {onDocumentMouseMove(e)}, delay);
     
     document.addEventListener("mousemove", (e) => {debounced(e) }, false);
     document.addEventListener("mousedown", (e) => {onDocumentMouseDown(e) }, false);
     document.addEventListener("contextmenu", (e) => {onDocumentRightMouseDown(e) }, false);
-
-
 }
 const clock = new Clock();
 
