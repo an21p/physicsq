@@ -22,15 +22,15 @@ The **AABB** method uses rectangular bounds around objects for simple, efficient
 
 #### **Steps:**
 1. Define a rectangle (bounding box) around each object.
-2. Check for overlap using the minimum and maximum \( x \) and \( y \) coordinates:
+2. Check for overlap using the minimum and maximum $`x`$ and $`y`$ coordinates:
    - Overlap conditions:
-     \[
+     ```math
      x_{min1} < x_{max2} \text{ and } x_{max1} > x_{min2}
-     \]
-     \[
+     ````
+     ```math
      y_{min1} < y_{max2} \text{ and } y_{max1} > y_{min2}
-     \]
-
+     ```
+     
 #### **Advantages:**
 - Lightweight and computationally inexpensive.
 - Ideal for simple or pre-filtering collision checks.
