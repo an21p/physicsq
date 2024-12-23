@@ -30,8 +30,8 @@ ruleM: {[state]
 rule0: {[state]
     scale: value `.boids.scaleR0;
     :`sym xkey select sym, 
-                vX:scale*( (value `.boids.targetX)-pX ), 
-                vY:scale*( (value `.boids.targetX)-pY ) 
+                vX:scale* ( 0-pX ), 
+                vY:scale* ( 0-pY ) 
            from state where static=0b};
 
 

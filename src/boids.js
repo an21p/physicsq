@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Clock } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { debounce } from 'lodash-es';
 
 
 function connect(initSettings) {    
@@ -71,11 +72,14 @@ function onDocumentMouseDown( event ) {
 }
 
 function onDocumentMouseMove( event ) {
+    if (!followMouse) return;
     moveToMouse(event)
 }
 
 function onDocumentRightMouseDown( event ) {
     followMouse = !followMouse;
+    console.log(followMouse);
+    
 }
 
 function addNewObjects(state) {
@@ -193,7 +197,7 @@ function init() {
         maxSpeed: 200.0,
     };
 
-    ruleM.add(settings, 'ruleMScale', 0, 0.01, 0.001).name('Scale').onChange(value => {
+    ruleM.add(settings, 'ruleMScale', 0, 0.02, 0.001).name('Scale').onChange(value => {
         ws.send(`{"action": "settings", "key": "ruleMScale", "value":${value}}`);
     });    
     rule0.add(settings, 'ruleZeroScale', 0, 0.1, 0.001).name('Scale').onChange(value => {
