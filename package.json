@@ -15,6 +15,7 @@
     "vite": "^6.0.3"
   },
   "dependencies": {
+    "lodash-es": "^4.17.21",
     "three": "^0.171.0"
   }
 }

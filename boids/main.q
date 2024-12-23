@@ -15,6 +15,11 @@ runWS: {
 	// params: message`params;	
 	// show raze "running " ,string(action);
 
+	if[action~`mouse; 
+		`.boids.targetX set `float$message`x;
+		`.boids.targetY set `float$message`y;
+ 	];
+
 	if[action~`settings; 
 
 		k: `$message`key;

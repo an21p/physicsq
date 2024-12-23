@@ -7,6 +7,8 @@ scaleR2: 0.2;
 distance: 20f;
 scaleR3: 0.125;
 vMax: 95f;
+targetX: 0f;
+targetY: 0f;
 
 initState: {[n]
     `.physics.defaultCircleRadius set  50f;
@@ -19,8 +21,8 @@ initState: {[n]
 rule0: {[state]
     scale: value `.boids.scaleR0;
     :`sym xkey select sym, 
-                vX:scale*( 0-pX ), 
-                vY:scale*( 0-pY ) 
+                vX:scale*( (value `.boids.targetX)-pX ), 
+                vY:scale*( (value `.boids.targetX)-pY ) 
            from state where static=0b};
 
 

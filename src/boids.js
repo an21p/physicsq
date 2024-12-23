@@ -3,7 +3,6 @@ import { Clock } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-const clock = new Clock();
 
 function connect(initSettings) {    
     if ("WebSocket" in window) {
@@ -53,6 +52,18 @@ function setPositionAndRotation(o, e) {
     o.position.y = e.pY;
     o.rotation.x = e.theta;
     return o;
+}
+
+function onDocumentMouseMove( event ) {
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    planeNormal.copy(camera.position).normalize();
+    plane.setFromNormalAndCoplanarPoint(planeNormal, scene.position);
+    raycaster.setFromCamera(mouse, camera);
+    raycaster.ray.intersectPlane(plane, intersectionPoint);
+    console.log(intersectionPoint);
+    // console.table(intersectionPoint);
+    
 }
 
 function addNewObjects(state) {
@@ -138,7 +149,8 @@ function init() {
 
     //controls
     controls = new OrbitControls( camera, renderer.domElement );
-    controls.listenToKeyEvents( window ); // optional
+    controls.enableRotate = false;
+    controls.enablePan = false;
 
     controls.addEventListener( 'change', () => {renderer.render( scene, camera )} ); // call this only in static scenes (i.e., if there is no animation loop)
     controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
@@ -195,8 +207,20 @@ function init() {
         connect(initSettings);
     });
 
+    // mouse 
+    document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
 }
+const clock = new Clock();
 
 let ws, renderer, controls, camera, scene
 let shapes = {};
+
+// mouse click
+const mouse = new THREE.Vector2();
+const intersectionPoint = new THREE.Vector3();
+const planeNormal = new THREE.Vector3();
+const plane = new THREE.Plane();
+const raycaster = new THREE.Raycaster();
+
 init();
