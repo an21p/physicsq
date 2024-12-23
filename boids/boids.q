@@ -2,11 +2,11 @@
 \d .boids
 
 scaleR0: 0.025;
-scaleR1: 0.015;
-scaleR2: 0.2;
-distance: 20f;
+scaleR1: 0.018;
+scaleR2: 0.1;
+distance: 100f;
 scaleR3: 0.125;
-vMax: 95f;
+vMax: 5f;
 targetX: 0f;
 targetY: 0f;
 
@@ -22,7 +22,7 @@ rule0: {[state]
     scale: value `.boids.scaleR0;
     :`sym xkey select sym, 
                 vX:scale*( (value `.boids.targetX)-pX ), 
-                vY:scale*( (value `.boids.targetX)-pY ) 
+                vY:scale*( (value `.boids.targetY)-pY ) 
            from state where static=0b};
 
 

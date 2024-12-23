@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Clock } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { debounce } from 'lodash-es';
 
 
 function connect(initSettings) {    
@@ -23,9 +24,9 @@ function connect(initSettings) {
                 case 'getState':
                     animate(d.result);
                     const delta = clock.getDelta();
-                    setTimeout(()=> {
+                    // setTimeout(()=> {
                         ws.send(`{"action": "update", "delta": ${delta}}`);
-                    },25);
+                    // },25);
             }
         };
         ws.onclose = (e) => {
@@ -61,7 +62,8 @@ function onDocumentMouseMove( event ) {
     plane.setFromNormalAndCoplanarPoint(planeNormal, scene.position);
     raycaster.setFromCamera(mouse, camera);
     raycaster.ray.intersectPlane(plane, intersectionPoint);
-    console.log(intersectionPoint);
+    // console.log(intersectionPoint);
+    ws.send(`{"action": "mouse", "x": ${intersectionPoint.x}, "y": ${intersectionPoint.y}}`);
     // console.table(intersectionPoint);
     
 }
@@ -208,7 +210,11 @@ function init() {
     });
 
     // mouse 
-    document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    const delay = 0;
+    const debounced = debounce((e) => {onDocumentMouseMove(e)}, delay);
+    
+    document.addEventListener("mousemove", (e) => {debounced(e) }, false);
+
 
 }
 const clock = new Clock();

@@ -44,6 +44,7 @@ runWS: {
 		dict: (`state`dt)!(value `state;delta);
 		`state set .boids.updateState[dict];
 		(neg .z.w) .j.j getState[];
-	]};
+	];
+	};
 
 getState:{`func`result!(`getState; get `state)};
