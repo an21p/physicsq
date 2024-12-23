@@ -3,7 +3,7 @@
 A server-driven physics engine built with **q** for kdb+ and visualized on the web using **THREE.js**. The engine simulates the motion of objects under gravity, handles collisions, and provides real-time updates via WebSockets.
 [Also check out boids](./boids/README.md)
 
-![](./Physics2.gif)
+![](./public/img/PhysicsQ.gif)
 
 ---
 
