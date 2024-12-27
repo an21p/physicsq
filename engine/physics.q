@@ -451,7 +451,7 @@ updatePositionsAndVelocities: {[state; dt]
 
 updatePositionsAndVelocitiesWithInput: {[state; input; dt]
     // show "xx",input;
-    invMass first exec invM from state where sym=`1;
+    invMass: first exec invM from state where sym=`1;
     acc: .physics.acceleration[input;invMass];
     aXin: (acc 0);
     aYin: (acc 1);

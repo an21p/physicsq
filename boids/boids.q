@@ -10,6 +10,7 @@ scaleR3: 0.125;
 vMax: 95f;
 targetX: 0f;
 targetY: 0f;
+useCollisions: 0b;
 
 initState: {[n]
     `.physics.defaultCircleRadius set  50f;
@@ -95,9 +96,11 @@ updateState: {[dict]
     state: .boids.limitSpeed[state];
 
     //// apply physics using the velocities above
-    // state: .physics.checkCollisions[state];
+    useCollisions: value `.boids.useCollisions;
+
     state: .physics.updatePositionsAndVelocities[state;dt]; 
-    
+    // if [1b~useCollisions; state: .physics.checkCollisions[state]];
+
 
 
     :state};
