@@ -442,9 +442,9 @@ updatePositionsAndVelocities: {[state; dt]
 
     / 3. Update angular velocity for X, Y components 
     / 4. Update rotation for X, Y, Z components (mod by 2π)
-            // float angularAcceleration = rigidBody->torque / rigidBody->shape.momentOfInertia;
-            // rigidBody->angularVelocity += angularAcceleration * dt;
-            // rigidBody->angle += rigidBody->angularVelocity * dt;
+            // angularAcceleration: torque % momentOfInertia;
+            // angularVelocity: angularVelocity + angularAcceleration * dt;
+            // angle: angle + angularVelocity * dt;
     :state};
 
 
